@@ -103,17 +103,16 @@ async function handleFileUpload(event) {
     return;
   }
 
-  // Only allow upload if signed in
+  // Allow anonymous uploads by default
   const idToken = localStorage.getItem("cognito_id_token");
-  if (!idToken) {
-    alert("Please sign in first.");
-    return;
+  let userId = "anonymous";
+  if (idToken) {
+    const userInfo = decodeJwt(idToken);
+    userId = userInfo.sub;
   }
 
-  const userInfo = decodeJwt(idToken);
-
   try {
-    await uploadDataFile(userInfo.sub, "tiktok", "data", file);
+    await uploadDataFile(userId, "tiktok", "data", file);
 
     // Preview: Handle JSON or TXT
     const reader = new FileReader();
