@@ -13,7 +13,7 @@ def handler(event, context):
     platform = body.get('platform', 'tiktok')
     data_type = body.get('data_type', 'videos')
     filename = body.get('filename', 'data.json')
-    today = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
     s3_key = f"uploads/platform={platform}/date={today}/type={data_type}/user={user_id}/{filename}"
 
     presigned_url = s3.generate_presigned_url(
