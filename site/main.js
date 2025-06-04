@@ -135,6 +135,9 @@ async function handleFileUpload(event) {
   } catch (err) {
     alert("Upload failed");
   }
+  } catch (err) {
+      alert("Upload failed");
+  }
 }
 
 // Utility: Flattens a nested JSON object for easy preview
@@ -183,10 +186,11 @@ if (browseBtn && fileInput) {
 
 // === SIGN IN REDIRECT ===
 
-const signInButton = document.getElementById("signInBtn");
-if (signInButton) {
-  signInButton.addEventListener("click", () => {
-    const loginUrl = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
-    window.location.href = loginUrl;
-  });
-}
+  const signInButton = document.getElementById("signInBtn");
+  if (signInButton) {
+    signInButton.addEventListener("click", () => {
+      const loginUrl = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
+      window.location.href = loginUrl;
+    });
+  }
+
