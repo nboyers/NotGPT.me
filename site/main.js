@@ -87,21 +87,39 @@ async function uploadDataFile(userId, platform, dataType, file) {
 
 // === FILE PARSING & PREVIEW (for in-browser preview) ===
 
-function handleFileUpload(event) {
+async function handleFileUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    try {
-      const jsonData = JSON.parse(e.target.result);
-      const output = document.getElementById("uploadResult");
-      output.textContent = JSON.stringify(flattenJSON(jsonData), null, 2);
-    } catch (err) {
-      alert("Invalid JSON file");
-    }
-  };
-  reader.readAsText(file);
+  const idToken = localStorage.getItem("cognito_id_token");
+  let userInfo = null;
+  let targetUserId = "anonymous";
+  let personal = false;
+  if (idToken) {
+    userInfo = decodeJwt(idToken);
+    targetUserId = userInfo.sub;
+    personal = true;
+  }
+
+  try {
+    await uploadDataFile(targetUserId, "tiktok", "data", file);
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        const jsonData = JSON.parse(e.target.result);
+        const output = document.getElementById("uploadResult");
+        const prefix = personal
+          ? "Upload successful! Your private data preview:\n"
+          : "Thanks for contributing! Preview of your uploaded data:\n";
+        output.textContent = prefix + JSON.stringify(flattenJSON(jsonData), null, 2);
+      } catch (err) {
+        alert("Invalid JSON file");
+      }
+    };
+    reader.readAsText(file);
+  } catch (err) {
+    alert("Upload failed");
+  }
 }
 
 // Utility: Flattens a nested JSON object for easy preview

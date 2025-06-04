@@ -138,7 +138,10 @@
 .navbar-brand {
   font-size: 1.25rem;
   font-weight: 600;
+}
+.navbar-brand a {
   color: #ffffff;
+  text-decoration: none;
 }
 
 .navbar-links {
@@ -280,7 +283,7 @@
     <source src="./media/background2.mp4" type="video/mp4">
   </video>
 <nav class="navbar">
-  <div class="navbar-brand">HumanTone</div>
+  <div class="navbar-brand"><a href="/">HumanTone</a></div>
   <ul class="navbar-links">
     <li><a href="/insights.html">Collective Insights</a></li>
     <li><a href="/api.html">Developer API</a></li>
@@ -308,6 +311,7 @@
   <div class="drop-zone-or">or</div>
   <button type="button" class="drop-zone-btn" id="browseBtn">Browse Files</button>
   <input type="file" id="fileInput" accept=".json,.zip,.csv" style="display:none;">
+  <pre id="uploadResult" style="max-width:410px; margin-top:1rem; text-align:left; white-space:pre-wrap; word-break:break-word;"></pre>
 </div>
 <div class="features-section">
   <h2>What you get with HumanTone</h2>
