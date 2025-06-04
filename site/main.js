@@ -84,61 +84,62 @@ async function uploadDataFile(userId, platform, dataType, file) {
   if (!uploadRes.ok) throw new Error("Upload failed");
   return key;
 }
+// === FILE VALIDATION ===
+function isAcceptedFile(file) {
+  if (!file) return false;
+  // Accept only .json or .txt files by extension (case insensitive)
+  const allowedExtensions = ['.json', '.txt'];
+  const fileName = file.name.toLowerCase();
+  return allowedExtensions.some(ext => fileName.endsWith(ext));
+}
 
 // === FILE PARSING & PREVIEW (for in-browser preview) ===
-
 async function handleFileUpload(event) {
   const file = event.target.files[0];
+  const output = document.getElementById("uploadResult");
   if (!file) return;
-
-  const idToken = localStorage.getItem("cognito_id_token");
-
-  let userInfo = null;
-  let targetUserId = "anonymous";
-  let personal = false;
-  if (idToken) {
-    userInfo = decodeJwt(idToken);
-    targetUserId = userInfo.sub;
-    personal = true;
+  if (!isAcceptedFile(file)) {
+    output.textContent = "Error: Only JSON or TXT files are allowed.";
+    return;
   }
 
-  try {
-    await uploadDataFile(targetUserId, "tiktok", "data", file);
-
+  // Only allow upload if signed in
+  const idToken = localStorage.getItem("cognito_id_token");
   if (!idToken) {
     alert("Please sign in first.");
     return;
   }
+
   const userInfo = decodeJwt(idToken);
 
   try {
     await uploadDataFile(userInfo.sub, "tiktok", "data", file);
 
+    // Preview: Handle JSON or TXT
     const reader = new FileReader();
     reader.onload = function (e) {
-      try {
-        const jsonData = JSON.parse(e.target.result);
-        const output = document.getElementById("uploadResult");
-
-        const prefix = personal
-          ? "Upload successful! Your private data preview:\n"
-          : "Thanks for contributing! Preview of your uploaded data:\n";
-        output.textContent = prefix + JSON.stringify(flattenJSON(jsonData), null, 2);
-
-        output.textContent = "Upload successful!\n" + JSON.stringify(flattenJSON(jsonData), null, 2);
-
-      } catch (err) {
-        alert("Invalid JSON file");
+      let preview;
+      if (file.name.toLowerCase().endsWith('.json')) {
+        try {
+          const jsonData = JSON.parse(e.target.result);
+          preview = "Upload successful! Your private data preview:\n" +
+            JSON.stringify(flattenJSON(jsonData), null, 2);
+        } catch (err) {
+          preview = "Upload successful, but preview failed: Invalid JSON file.";
+        }
+      } else {
+        // TXT file: Just show first 500 characters
+        preview = "Upload successful! First lines:\n" +
+          e.target.result.slice(0, 500);
       }
+      output.textContent = preview;
     };
     reader.readAsText(file);
   } catch (err) {
     alert("Upload failed");
   }
-  } catch (err) {
-      alert("Upload failed");
-  }
 }
+
 
 // Utility: Flattens a nested JSON object for easy preview
 function flattenJSON(obj, prefix = '', res = {}) {
@@ -171,11 +172,20 @@ if (dropZone && fileInput) {
     dropZone.classList.remove('dragover');
   });
   dropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropZone.classList.remove('dragover');
-    fileInput.files = e.dataTransfer.files;
-    fileInput.dispatchEvent(new Event('change')); // Trigger file upload logic
-  });
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (!isAcceptedFile(file)) {
+    document.getElementById("uploadResult").textContent = "Error: Only JSON or TXT files are allowed.";
+    return;
+  }
+  // Set fileInput's files (keeps browse and drop flows identical)
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file);
+  fileInput.files = dataTransfer.files;
+  fileInput.dispatchEvent(new Event('change'));
+});
+
 }
 if (browseBtn && fileInput) {
   browseBtn.addEventListener('click', (e) => {
