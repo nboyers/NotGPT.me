@@ -164,6 +164,18 @@ class HumanToneStack(Stack):
             }
         )
 
+        get_url_function = _lambda.Function(self, "GetUploadUrl",
+            runtime=_lambda.Runtime.PYTHON_3_13,
+            architecture=Architecture.ARM_64,
+            handler="GetUploadUrl.handler",
+            code=_lambda.Code.from_asset("lambda/get_upload_url"),
+            environment={
+                "UPLOAD_BUCKET": upload_bucket.bucket_name
+            }
+        )
+
+        upload_bucket.grant_put(get_url_function)
+
         upload_bucket.grant_read(process_function)
         aggregation_table.grant_write_data(process_function)
 
@@ -171,6 +183,15 @@ class HumanToneStack(Stack):
             s3.EventType.OBJECT_CREATED,
             s3n.LambdaDestination(process_function)
         )
+
+        api = apigateway.RestApi(self, "UploadApi",
+            default_cors_preflight_options=apigateway.CorsOptions(
+                allow_origins=["*"],
+                allow_methods=["POST", "OPTIONS"]
+            )
+        )
+        api_resource = api.root.add_resource("api").add_resource("get-presigned-url")
+        api_resource.add_method("POST", apigateway.LambdaIntegration(get_url_function))
 
         glue_db = glue.CfnDatabase(self, "UserDataDB",
             catalog_id=self.account,
@@ -211,3 +232,4 @@ class HumanToneStack(Stack):
         CfnOutput(self, "UploadBucketName", value=upload_bucket.bucket_name)
         CfnOutput(self, "GlueDatabaseName", value=glue_db.ref)
         CfnOutput(self, "GlueTableName", value="uploads")
+        CfnOutput(self, "ApiUrl", value=api.url)
