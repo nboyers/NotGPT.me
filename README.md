@@ -1,58 +1,24 @@
+# HumanTone
 
-# Welcome to your CDK Python project!
+HumanTone lets creators understand their social media data without writing code. Upload your TikTok export and the app stores it securely in S3, processes it with AWS Lambda and Glue, and surfaces trends through simple web pages.
 
-This is a blank project for CDK development with Python.
+Uploads from signed‑in users are stored in a private area so they can explore personal insights. Files uploaded while signed out are aggregated anonymously for community-wide statistics.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+The infrastructure is defined using the AWS CDK and includes:
 
-This project is set up like a standard Python project.  The initialization
-process also creates a virtualenv within this project, stored under the `.venv`
-directory.  To create the virtualenv it assumes that there is a `python3`
-(or `python` for Windows) executable in your path with access to the `venv`
-package. If for any reason the automatic creation of the virtualenv fails,
-you can create the virtualenv manually.
+- **Amazon S3** for hosting the site and storing raw uploads
+- **AWS Lambda** functions for generating presigned upload URLs and cleaning data
+- **Amazon DynamoDB** and **AWS Glue** for aggregation
+- **Amazon Cognito** for optional authentication
+- **API Gateway** for the upload API
 
-To manually create a virtualenv on MacOS and Linux:
+## Monetization Ideas
 
+The project can be monetized with paid tiers that unlock advanced analytics, personal data exports, and API access. Free anonymous uploads help grow the collective insights, while subscribers receive deeper trend analysis and additional upload capacity.
+
+## Development
+
+```bash
+pip install -r requirements-dev.txt -r requirements.txt
+pytest -q
 ```
-$ python3 -m venv .venv
-```
-
-After the init process completes and the virtualenv is created, you can use the following
-step to activate your virtualenv.
-
-```
-$ source .venv/bin/activate
-```
-
-If you are a Windows platform, you would activate the virtualenv like this:
-
-```
-% .venv\Scripts\activate.bat
-```
-
-Once the virtualenv is activated, you can install the required dependencies.
-
-```
-$ pip install -r requirements.txt
-```
-
-At this point you can now synthesize the CloudFormation template for this code.
-
-```
-$ cdk synth
-```
-
-To add additional dependencies, for example other CDK libraries, just add
-them to your `setup.py` file and rerun the `pip install -r requirements.txt`
-command.
-
-## Useful commands
-
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
-
-Enjoy!
