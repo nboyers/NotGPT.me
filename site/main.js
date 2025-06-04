@@ -92,6 +92,19 @@ async function handleFileUpload(event) {
   if (!file) return;
 
   const idToken = localStorage.getItem("cognito_id_token");
+
+  let userInfo = null;
+  let targetUserId = "anonymous";
+  let personal = false;
+  if (idToken) {
+    userInfo = decodeJwt(idToken);
+    targetUserId = userInfo.sub;
+    personal = true;
+  }
+
+  try {
+    await uploadDataFile(targetUserId, "tiktok", "data", file);
+
   if (!idToken) {
     alert("Please sign in first.");
     return;
@@ -100,12 +113,20 @@ async function handleFileUpload(event) {
 
   try {
     await uploadDataFile(userInfo.sub, "tiktok", "data", file);
+
     const reader = new FileReader();
     reader.onload = function (e) {
       try {
         const jsonData = JSON.parse(e.target.result);
         const output = document.getElementById("uploadResult");
+
+        const prefix = personal
+          ? "Upload successful! Your private data preview:\n"
+          : "Thanks for contributing! Preview of your uploaded data:\n";
+        output.textContent = prefix + JSON.stringify(flattenJSON(jsonData), null, 2);
+
         output.textContent = "Upload successful!\n" + JSON.stringify(flattenJSON(jsonData), null, 2);
+
       } catch (err) {
         alert("Invalid JSON file");
       }
