@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HumanTone — Insights, Beautifully Simple</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0f0f11 0%, #1a1c1f 100%);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .background-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      object-fit: cover;
+      z-index: -1;
+      opacity: 0.08;
+      filter: blur(2px) grayscale(30%);
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 2rem 2rem 2rem;
+      text-align: center;
+      min-height: 100vh;
+      justify-content: flex-start;
+    }
+    .hero-wrap {
+      width: 100%;
+      margin: 0 auto 4rem auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .hero {
+      margin-top: 3.2rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .hero h1 {
+      font-size: 3.1rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+      color: #fff;
+      letter-spacing: -0.05em;
+    }
+    .hero p {
+      color: #bdbdbd;
+      font-size: 1.3rem;
+      font-weight: 400;
+      line-height: 1.5;
+      max-width: 640px;
+      margin: 0 auto 2.5rem auto;
+    }
+
+    /* ---- DROP ZONE ---- */
+    .drop-zone {
+      border: 2.5px dashed #3f4150;
+      border-radius: 18px;
+      background: #181a1f;
+      width: 100%;
+      max-width: 410px;
+      margin: 0 auto 2.8rem auto;
+      padding: 2.8rem 2rem 2.7rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 8px 44px 0 #10121740;
+      transition: border-color 0.15s, background 0.13s;
+    }
+    .drop-zone.dragover {
+      border-color: #4a90e2;
+      background: #23252c;
+    }
+    .cloud-icon {
+      margin-bottom: 1.15rem;
+    }
+    .cloud-icon svg {
+      display: block;
+      margin: 0 auto;
+    }
+    .drop-zone-text {
+      font-size: 2.0rem;
+      color: #e6e7ea;
+      font-weight: 500;
+      margin-bottom: 0.8rem;
+      letter-spacing: -0.03em;
+    }
+    .drop-zone-or {
+      font-size: 1.08rem;
+      color: #a3aab4;
+      margin-bottom: 1.18rem;
+    }
+    .drop-zone-btn {
+      font-size: 1.18rem;
+      padding: 0.78rem 2.3rem;
+      border: 2px solid #35b6ff;
+      background: #14151b;
+      color: #29a7e2;
+      border-radius: 9px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 0.2rem;
+      transition: background 0.13s, color 0.13s, border-color 0.12s;
+      box-shadow: 0 1.5px 8px #10121724;
+    }
+    .drop-zone-btn:hover,
+    .drop-zone-btn:focus {
+      background: #1c2433;
+      color: #7bdcff;
+      border-color: #43c4ff;
+      outline: none;
+    }
+
+    /* --------- Misc Site Styles --------- */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #232428e6;
+  padding: 1rem 2rem;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 2px 8px #10121725;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-brand {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.navbar-links {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-links li a {
+  color: #e2e2e2;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.navbar-links li a:hover {
+  color: #7bdcff;
+}
+
+.navbar-actions button {
+  background: #fff;
+  color: #000;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.navbar-actions button:hover {
+  background: #f1f1f1;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .navbar-links {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .navbar-actions {
+    align-self: flex-end;
+    margin-top: 0.5rem;
+  }
+}
+
+
+.features-section {
+  max-width: 1400px;         /* Wider for four cards in a row */
+  margin: 4rem auto 0 auto;
+  padding: 0 2rem;
+  text-align: center;
+}
+
+.features-section h2 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      color: #fff;
+      letter-spacing: -0.02em;
+}
+
+.features-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;         /* Don't wrap cards on desktop */
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.feature-box {
+  flex: 1 1 0;
+  min-width: 220px;
+  max-width: 270px;
+  background: #191b1f;
+  border-radius: 18px;
+  padding: 2rem 1.4rem 1.6rem 1.4rem;
+  text-align: center;
+  color: #f3f3f3;
+  box-shadow: 0 4px 24px 0 #1012171e;
+  border: none;
+}
+    .feature-box h3 {
+      color: #fff;
+      font-size: 1.13rem;
+      margin-bottom: 0.7rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .feature-box p {
+      color: #bdbdbd;
+      font-size: 1rem;
+      margin-bottom: 0;
+      font-weight: 400;
+    }
+    .footer {
+      font-size: 0.8rem;
+      margin-top: 2rem;
+      color: #666;
+      opacity: 0.8;
+    }
+    .footer a {
+      color: #999;
+      text-decoration: none;
+      margin: 0 0.5rem;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 1rem 0.3rem 1rem 0.3rem;
+      }
+      .hero h1 {
+        font-size: 2.0rem;
+      }
+    }
+    @media (max-width: 1000px) {
+    .features-grid {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+  </style>
+</head>
+<body>
+  <video autoplay muted loop playsinline class="background-video" onerror="this.style.display='none'">
+    <source src="./media/background2.mp4" type="video/mp4">
+  </video>
+<nav class="navbar">
+  <div class="navbar-brand">HumanTone</div>
+  <ul class="navbar-links">
+    <li><a href="/insights.html">Collective Insights</a></li>
+    <li><a href="/api.html">Developer API</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+  </ul>
+  <div class="navbar-actions">
+    <button id="signInBtn">Sign In</button>
+  </div>
+</nav>
+
+</nav>
+  <div class="container">
+    <div class="hero-wrap">
+<div class="hero">
+  <h1>Make Sense of Your Social Data Instantly</h1>
+  <p>Request your data from any platform—TikTok, YouTube, Instagram, and more. Drop the export here and see the trends behind your content.</p>
+  
+</div>
+<div class="drop-zone" id="dropZone">
+  <div class="cloud-icon">
+    <!-- svg unchanged -->
+  </div>
+<div class="drop-zone-text">Drag & Drop your exported ZIP file here</div>
+  <div class="drop-zone-or">or</div>
+  <button type="button" class="drop-zone-btn" id="browseBtn">Browse Files</button>
+  <input type="file" id="fileInput" accept=".json,.zip,.csv" style="display:none;">
+</div>
+<div class="features-section">
+  <h2>What you get with HumanTone</h2>
+  <div class="features-grid">
+    <div class="feature-box">
+      <h3>Simplified Data</h3>
+      <p>Your messy TikTok export, made clear—no code, no overwhelm.</p>
+    </div>
+    <div class="feature-box">
+      <h3>Instant Visuals</h3>
+      <p>Trends, patterns, and insights. See them right away.</p>
+    </div>
+    <div class="feature-box">
+      <h3>Export to CSV</h3>
+      <p>Download the cleaned data, ready for reporting or sharing.</p>
+    </div>
+    <div class="feature-box">
+      <h3>Always Private</h3>
+      <p>Your data is yours. No selling, no spam. Ever.</p>
+    </div>
+  </div>
+  <p style="color: #888; font-size: 1rem; margin-top: 0.5rem;">Currently, only TikTok exports are supported.</p>
+</div>
+
+
+
+    <div class="footer">
+      <a href="privacy.html">Privacy</a> |
+      <a href="terms.html">Terms</a> |
+      <a href="https://nobosoftware.com" target="_blank">Built by Nobos</a>
+    </div>
+  </div>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
