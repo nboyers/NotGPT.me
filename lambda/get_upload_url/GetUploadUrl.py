@@ -15,7 +15,17 @@ def handler(event, context):
     filename = body.get('filename', 'data.json')
     today = datetime.datetime.utcnow().strftime("%Y-%m-%d")
 
-    key = f"uploads/platform={platform}/date={today}/type={data_type}/user={user_id}/{filename}"
+    # Determine path based on data_type and user_id
+    if data_type == 'private' and user_id != 'anonymous':
+        # Private data for authenticated users
+        key = f"private/user={user_id}/platform={platform}/date={today}/{filename}"
+    elif data_type == 'collective' or user_id == 'anonymous':
+        # Collective data for anonymous users
+        key = f"collective/platform={platform}/date={today}/{filename}"
+    else:
+        # Fallback path
+        key = f"uploads/platform={platform}/date={today}/type={data_type}/user={user_id}/{filename}"
+    
     url = s3.generate_presigned_url(
         'put_object',
         Params={'Bucket': BUCKET, 'Key': key, 'ContentType': 'application/json'},

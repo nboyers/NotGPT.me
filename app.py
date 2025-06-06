@@ -1,6 +1,5 @@
-
 from aws_cdk import App
-from cdk import HumanToneStack
+from cdk.HumanToneStack import HumanToneStack  # Correct import
 
 
 app = App()

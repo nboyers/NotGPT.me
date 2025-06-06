@@ -1,0 +1,78 @@
+/* File Upload Styles */
+.file-info {
+  margin-bottom: 1rem;
+  text-align: left;
+  background-color: #1e2029;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #2a2d3a;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.file-info div {
+  margin-bottom: 0.5rem;
+}
+
+.file-info strong {
+  color: #7bdcff;
+  font-weight: 600;
+}
+
+.upload-btn {
+  display: block;
+  width: 100%;
+  padding: 0.8rem;
+  margin-top: 1rem;
+  background-color: #2a5885;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.upload-btn:hover {
+  background-color: #356ca4;
+}
+
+.upload-btn:disabled {
+  background-color: #1e2029;
+  color: #a3aab4;
+  cursor: not-allowed;
+}
+
+.status-message {
+  margin-top: 1rem;
+  color: #a3aab4;
+  font-size: 0.9rem;
+}
+
+.success-message {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.error-message {
+  color: #f44336;
+  font-weight: bold;
+}
+
+.view-insights-btn {
+  display: block;
+  width: 100%;
+  padding: 0.8rem;
+  margin-top: 1rem;
+  background-color: #2a5885;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.view-insights-btn:hover {
+  background-color: #356ca4;
+}

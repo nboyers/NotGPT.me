@@ -210,11 +210,12 @@ class HumanToneStack(Stack):
             database_input={"name": "humantone_user_data"}
         )
 
-        glue_table = glue.CfnTable(self, "RawUploadsTable",
+        # Create Glue table for collective data
+        glue_table_collective = glue.CfnTable(self, "CollectiveUploadsTable",
             catalog_id=self.account,
             database_name=glue_db.ref,
             table_input={
-                "name": "uploads",
+                "name": "collective_uploads",
                 "tableType": "EXTERNAL_TABLE",
                 "parameters": {"classification": "json"},
                 "storageDescriptor": {
@@ -224,7 +225,34 @@ class HumanToneStack(Stack):
                         {"name": "event", "type": "string"},
                         {"name": "raw", "type": "string"}
                     ],
-                    "location": f"s3://{upload_bucket.bucket_name}/",
+                    "location": f"s3://{upload_bucket.bucket_name}/collective/",
+                    "inputFormat": "org.apache.hadoop.mapred.TextInputFormat",
+                    "outputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+                    "serdeInfo": {
+                        "serializationLibrary": "org.openx.data.jsonserde.JsonSerDe",
+                        "parameters": {}
+                    }
+                }
+            }
+        )
+        
+        # Create Glue table for private data
+        glue_table_private = glue.CfnTable(self, "PrivateUploadsTable",
+            catalog_id=self.account,
+            database_name=glue_db.ref,
+            table_input={
+                "name": "private_uploads",
+                "tableType": "EXTERNAL_TABLE",
+                "parameters": {"classification": "json"},
+                "storageDescriptor": {
+                    "columns": [
+                        {"name": "user_id", "type": "string"},
+                        {"name": "platform", "type": "string"},
+                        {"name": "timestamp", "type": "string"},
+                        {"name": "event", "type": "string"},
+                        {"name": "raw", "type": "string"}
+                    ],
+                    "location": f"s3://{upload_bucket.bucket_name}/private/",
                     "inputFormat": "org.apache.hadoop.mapred.TextInputFormat",
                     "outputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
                     "serdeInfo": {
@@ -243,5 +271,6 @@ class HumanToneStack(Stack):
         CfnOutput(self, "UserTableName", value=user_table.table_name)
         CfnOutput(self, "UploadBucketName", value=upload_bucket.bucket_name)
         CfnOutput(self, "GlueDatabaseName", value=glue_db.ref)
-        CfnOutput(self, "GlueTableName", value="uploads")
+        CfnOutput(self, "GlueCollectiveTableName", value="collective_uploads")
+        CfnOutput(self, "GluePrivateTableName", value="private_uploads")
         CfnOutput(self, "ApiUrl", value=api.url)

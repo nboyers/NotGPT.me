@@ -1,12 +1,4 @@
-// auth.js - Authentication middleware and utilities
-
-// Simple function to check if user is authorized
-export function isAuthorized() {
-  const idToken = localStorage.getItem("cognito_id_token");
-  return !!idToken; // Return true if token exists
-}
-
-// Authentication middleware that can wrap event handlers
+// Simple auth middleware
 export function authMiddleware(callback) {
   return function(event) {
     const idToken = localStorage.getItem("cognito_id_token");
@@ -27,4 +19,9 @@ export function authMiddleware(callback) {
       window.location.href = loginUrl;
     }
   };
+}
+
+// Check if user is authorized
+export function isAuthorized() {
+  return !!localStorage.getItem("cognito_id_token");
 }
