@@ -1,4 +1,5 @@
-import boto3
+import boto3 
+from boto3.dynamodb.conditions import Attr
 import os
 import json
 import datetime

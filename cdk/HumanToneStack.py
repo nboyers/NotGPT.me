@@ -35,8 +35,7 @@ class HumanToneStack(Stack):
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True,
             public_read_access=False,
-            block_public_access=s3.BlockPublicAccess.BLOCK_ALL
-        )
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL, enforce_ssl=True)
         Tags.of(site_bucket).add("Project", cost_tags["Project"])
 
         oac = cloudfront.CfnOriginAccessControl(self, "SiteOAC",
@@ -141,8 +140,7 @@ class HumanToneStack(Stack):
         upload_bucket = s3.Bucket(self, "UserUploadBucket",
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True,
-            block_public_access=s3.BlockPublicAccess.BLOCK_ALL
-        )
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL, enforce_ssl=True)
         Tags.of(upload_bucket).add("Project", cost_tags["Project"])
 
         aggregation_table = dynamodb.Table(self, "AggregateStatsTable",

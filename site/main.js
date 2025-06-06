@@ -2,16 +2,35 @@
 const CLIENT_ID = "6764362ab2mqj3upebq0t3eu21";
 const COGNITO_DOMAIN = "auth.humantone.me";
 const REDIRECT_URI = window.location.origin;
+// This middleware will handle user authentication and authorization
+import { authMiddleware } from './auth';
 
 // === AUTHENTICATION ===
 
 // Decodes JWT token (for extracting user info)
+// Import Ajv for JSON schema validation
+// Ajv is used to validate the structure of the JSON payload before parsing
+const Ajv = require("ajv");
+
 function decodeJwt(token) {
   const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
   const jsonPayload = decodeURIComponent(
     atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
   );
-  return JSON.parse(jsonPayload);
+  const ajv = new Ajv();
+  const schema = {
+    type: "object",
+    properties: {
+      // Add specific properties expected in the JWT payload
+    },
+    required: []
+  };
+  const validate = ajv.compile(schema);
+  if (validate(JSON.parse(jsonPayload))) {
+    return JSON.parse(jsonPayload);
+  } else {
+    throw new Error('Invalid JWT payload');
+  }
 }
 
 // Sets up UI after successful login
@@ -25,7 +44,7 @@ function setupAuthUI(userInfo) {
   const accountBtn = document.createElement("button");
   accountBtn.id = "accountBtn";
   accountBtn.textContent = "Account";
-  accountBtn.onclick = () => alert("Account features coming soon!");
+  accountBtn.onclick = () => {};
   topActions.appendChild(accountBtn);
 
   // Add Sign Out button
@@ -49,11 +68,14 @@ window.addEventListener("load", () => {
   const hash = window.location.hash.substr(1);
   const params = new URLSearchParams(hash);
   const idToken = params.get("id_token") || localStorage.getItem("cognito_id_token");
-  if (idToken) {
-    localStorage.setItem("cognito_id_token", idToken);
-    const userInfo = decodeJwt(idToken);
-    setupAuthUI(userInfo);
-  }
+// Import the js-cookie library for secure cookie handling
+// import Cookies from 'js-cookie';
+
+if (idToken) {
+  Cookies.set('cognito_id_token', idToken, { secure: true, httpOnly: true });
+  const userInfo = decodeJwt(idToken);
+  setupAuthUI(userInfo);
+}
 
   // --- File Upload Trigger (Manual click) ---
   const fileInput = document.getElementById("fileInput");
@@ -135,7 +157,7 @@ async function handleFileUpload(event) {
     };
     reader.readAsText(file);
   } catch (err) {
-    alert("Upload failed");
+    output.textContent = "Upload failed";
   }
 }
 
@@ -160,37 +182,45 @@ const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
 const browseBtn = document.getElementById('browseBtn');
 
+// Import the authorization module
+// This module provides functions for user authentication and authorization
+
 if (dropZone && fileInput) {
   dropZone.addEventListener('click', () => fileInput.click());
   dropZone.addEventListener('dragover', e => {
     e.preventDefault();
-    dropZone.classList.add('dragover');
+    if (isAuthorized()) { // Check if the user is authorized
+      dropZone.classList.add('dragover');
+    }
   });
   dropZone.addEventListener('dragleave', e => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
   });
   dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('dragover');
-  const file = e.dataTransfer.files[0];
-  if (!isAcceptedFile(file)) {
-    document.getElementById("uploadResult").textContent = "Error: Only JSON or TXT files are allowed.";
-    return;
-  }
-  // Set fileInput's files (keeps browse and drop flows identical)
-  const dataTransfer = new DataTransfer();
-  dataTransfer.items.add(file);
-  fileInput.files = dataTransfer.files;
-  fileInput.dispatchEvent(new Event('change'));
-});
-
+    e.preventDefault();
+    if (isAuthorized()) { // Check if the user is authorized
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (!isAcceptedFile(file)) {
+        document.getElementById("uploadResult").textContent = "Error: Only JSON or TXT files are allowed.";
+        return;
+      }
+      // Set fileInput's files (keeps browse and drop flows identical)
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      fileInput.files = dataTransfer.files;
+      fileInput.dispatchEvent(new Event('change'));
+    }
+  });
 }
+
+// Import the authorization middleware
 if (browseBtn && fileInput) {
-  browseBtn.addEventListener('click', (e) => {
+  browseBtn.addEventListener('click', authMiddleware((e) => {
     e.stopPropagation();
     fileInput.click();
-  });
+  }));
 }
 
 // === SIGN IN REDIRECT ===

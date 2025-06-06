@@ -1,10 +1,11 @@
 import boto3
+from boto3.dynamodb.conditions import Attr
 import os
 import time
-import uuid
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['USER_TABLE_NAME'])
+
 
 def handler(event, context):
     user_id = event['request']['userAttributes']['sub']
@@ -22,5 +23,8 @@ def handler(event, context):
         "agreedToTerms": True,
     }
 
-    table.put_item(Item=item)
+    table.put_item(
+        Item=item,
+        ConditionExpression=Attr('userId').not_exists()
+    )
     return event  # Required to continue the Cognito signup flow
