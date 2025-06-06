@@ -168,7 +168,7 @@ function redirectToLogin() {
 }
 
 // === INITIALIZATION ===
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
   // Set up auth
   const hash = window.location.hash.substr(1);
   const params = new URLSearchParams(hash);
@@ -234,8 +234,13 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Set up sign in button
   const signInBtn = document.getElementById("signInBtn");
-    if (signInBtn) {
-      signInBtn.addEventListener("click", redirectToLogin);
-    }
-  });
+  if (signInBtn) {
+    signInBtn.addEventListener("click", redirectToLogin);
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
 }
