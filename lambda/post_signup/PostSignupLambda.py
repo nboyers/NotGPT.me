@@ -1,5 +1,5 @@
+from xml.dom.minidom import Attr
 import boto3
-from boto3.dynamodb.conditions import Attr
 import os
 import time
 

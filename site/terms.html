@@ -1,25 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Terms of Use – HumanTone.me</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HumanTone - Terms of Service</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #0f0f11;
-      color: #fff;
-      padding: 2rem;
-      line-height: 1.6;
-      max-width: 800px;
-      margin: auto;
+    body { margin:0; font-family: 'Inter', sans-serif; background:#0f0f11; color:#fff; }
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #232428e6;
+      padding: 1rem 2rem;
+      border-radius: 0 0 16px 16px;
+      box-shadow: 0 2px 8px #10121725;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    a { color: #8ab4f8; }
+
+    .navbar-brand {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .navbar-brand a {
+      color: #ffffff;
+      text-decoration: none;
+    }
+
+    .navbar-links {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+      margin: 0;
+      padding: 0;
+    }
+
+    .navbar-links li a {
+      color: #e2e2e2;
+      font-size: 1rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .navbar-links li a:hover {
+      color: #7bdcff;
+    }
+
+    .navbar-actions button {
+      background: #fff;
+      color: #000;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .navbar-actions button:hover {
+      background: #f1f1f1;
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .navbar-links {
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+      }
+
+      .navbar-actions {
+        align-self: flex-end;
+        margin-top: 0.5rem;
+      }
+    }
+    .container { padding:2rem; max-width:800px; margin:0 auto; }
   </style>
 </head>
-<p><a href="index.html" style="color:#8ab4f8;">← Back to Home</a></p>
 <body>
-<h2>Use of Service</h2>
+  <nav class="navbar">
+     <div class="navbar-brand"><a href="index.html">HumanTone</a></div>
+    <ul class="navbar-links" style="list-style:none; display:flex; gap:1rem; margin:0; padding:0;">
+      <li><a href="insights.html">Collective Insights</a></li>
+      <li><a href="api.html">Developer API</a></li>
+      <li><a href="pricing.html">Pricing</a></li>
+      <li><a href="docs.html">Docs</a></li>
+  </ul>
+  <div class="navbar-actions">
+    <button id="signInBtn">Sign In</button>
+  </div>
+  </nav>
+  <div class="container">
+   <h2>Use of Service</h2>
 <p>
   HumanTone.me offers tools to help users interpret and visualize their exported platform data (e.g., from TikTok), providing trends, usage insights, and aggregated analytics. You agree to use the service lawfully and responsibly, and not to interfere with platform operations, upload unauthorized material, or attempt to reverse-engineer or misuse the system or API.
 </p>
@@ -52,7 +132,7 @@
 <p>
   These terms may be updated periodically to reflect platform changes or legal requirements. Updates will be posted on this page, and continued use of HumanTone.me constitutes acceptance of the revised terms.
 </p>
-
-
+  </div>
+  <script type="module" src="main.js"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
-#!/usr/bin/env python3
-# from aws_cdk import App  # Import specific class for App creation
-# from cdk.HumanToneStack import HumanToneStack  # Import HumanToneStack from cdk package
+
+from aws_cdk import App
+from cdk import HumanToneStack
+
 
 app = App()
 

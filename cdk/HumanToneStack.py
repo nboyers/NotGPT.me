@@ -95,7 +95,21 @@ class HumanToneStack(Stack):
                 },
                 "viewerCertificate": {
                     "cloudFrontDefaultCertificate": True
-                }
+                },
+                "customErrorResponses": [
+                    {
+                        "errorCode": 403,
+                        "responseCode": 200,
+                        "responsePagePath": "/index.html",
+                        "errorCachingMinTtl": 10
+                    },
+                    {
+                        "errorCode": 404,
+                        "responseCode": 200,
+                        "responsePagePath": "/index.html",
+                        "errorCachingMinTtl": 10
+                    }
+                ]
             }
         )
 
