@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HumanTone - TikTok Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="styles.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #0f0f11;
+      color: #fff;
+    }
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #232428e6;
+      padding: 1rem 2rem;
+      border-radius: 0 0 16px 16px;
+      box-shadow: 0 2px 8px #10121725;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar-brand {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .navbar-brand a {
+      color: #ffffff;
+      text-decoration: none;
+    }
+    .navbar-actions button {
+      background: #fff;
+      color: #000;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h2 {
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+    .hidden { display:none; }
+    .question-form textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #2a2d3a;
+      background: #1e2029;
+      color: #fff;
+    }
+    .question-form button {
+      margin-top: 0.5rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      background: #2a5885;
+      color: #fff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand"><a href="index.html">HumanTone</a></div>
+    <div id="userDisplay"></div>
+    <div class="navbar-actions">
+      <button id="signInBtn">Sign In</button>
+      <button id="signOutBtn" class="hidden">Sign Out</button>
+    </div>
+  </nav>
+  <main>
+    <section id="privateSection" class="hidden">
+      <h2>Your TikTok Dashboard</h2>
+      <p>Upload your exports privately to unlock personal trends and insights.</p>
+      <input type="file" id="privateFile" accept=".json,.txt" />
+      <button class="upload-btn" id="privateUploadBtn">Upload to My Account</button>
+      <div class="status-message" id="privateStatus"></div>
+    </section>
+
+    <section id="collectiveSection">
+      <h2>Collective Insights</h2>
+      <p>Uploads here are anonymous and used only for aggregate analytics.</p>
+      <input type="file" id="collectiveFile" accept=".json,.txt" />
+      <button class="upload-btn" id="collectiveUploadBtn">Upload to Collective Pool</button>
+      <div class="status-message" id="collectiveStatus"></div>
+    </section>
+
+    <section id="qaSection">
+      <h2>Ask a Question</h2>
+      <form class="question-form" id="qaForm">
+        <textarea id="questionInput" placeholder="e.g. Which hashtags drive the most views?"></textarea>
+        <button type="submit">Ask</button>
+      </form>
+      <p id="qaNote"></p>
+    </section>
+  </main>
+
+  <script type="module" src="tiktok.js"></script>
+</body>
+</html>
