@@ -168,15 +168,39 @@ function initApp() {
   }
 
   const fileInput = document.getElementById('fileInput');
-  if (fileInput) fileInput.addEventListener('change', handleFileUpload);
-
   const browseBtn = document.getElementById('browseBtn');
-  if (browseBtn && fileInput) {
+
+  // Add debug logging
+  console.log('File input element found:', !!fileInput);
+  console.log('Browse button element found:', !!browseBtn);
+
+  if (!fileInput) {
+    console.error('File input element not found');
+    return;
+  }
+
+  if (!browseBtn) {
+    console.error('Browse button element not found');
+    return;
+  }
+
+  try {
+    fileInput.addEventListener('change', handleFileUpload);
+    console.log('Change event listener added to file input');
+  } catch (error) {
+    console.error('Error adding change event listener:', error);
+  }
+
+  try {
     browseBtn.addEventListener('click', e => {
+      console.log('Browse button clicked');
       e.preventDefault();
       e.stopPropagation();
       fileInput.click();
     });
+    console.log('Click event listener added to browse button');
+  } catch (error) {
+    console.error('Error adding click event listener:', error);
   }
 
   const dropZone = document.getElementById('dropZone');

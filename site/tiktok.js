@@ -3,6 +3,63 @@ const COGNITO_DOMAIN = "auth.humantone.me";
 const REDIRECT_URI = `${window.location.origin}/tiktok.html`;
 const API_ENDPOINT = "/api/get-presigned-url";
 
+// File validation
+function isAcceptedFile(file) {
+  if (!file) return false;
+  const allowed = ['.json', '.txt'];
+  return allowed.some(ext => file.name.toLowerCase().endsWith(ext));
+}
+
+// File UI helpers
+function createFilePreview(file) {
+  const icon = file.name.endsWith('.json')
+    ? `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#35b6ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><circle cx="10" cy="13" r="2"></circle><path d="M8 21v-5h8v5"></path></svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#35b6ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
+
+  return `
+    <div class="file-preview" style="display:flex;align-items:center;margin-bottom:10px">
+      <div style="margin-right:15px">${icon}</div>
+      <div>
+        <div style="font-weight:bold;font-size:16px">${file.name}</div>
+        <div style="color:#a3aab4;font-size:14px">${(file.size / 1024).toFixed(2)} KB</div>
+      </div>
+    </div>`;
+}
+
+function setupFileUploadUI(containerId, file) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const preview = document.createElement('div');
+  preview.className = 'upload-preview';
+  preview.innerHTML = createFilePreview(file);
+
+  const progress = document.createElement('progress');
+  progress.style.width = '100%';
+  progress.style.display = 'none';
+  progress.max = 1;
+  progress.value = 0;
+
+  const status = document.createElement('div');
+  status.className = 'upload-status';
+  status.style.marginTop = '0.5rem';
+
+  const uploadBtn = document.createElement('button');
+  uploadBtn.textContent = 'Upload';
+  uploadBtn.className = 'upload-btn';
+  uploadBtn.style.marginTop = '1rem';
+  uploadBtn.style.width = '100%';
+
+  // Clear previous content
+  container.innerHTML = '';
+  container.appendChild(preview);
+  container.appendChild(progress);
+  container.appendChild(status);
+  container.appendChild(uploadBtn);
+
+  return { preview, progress, status, uploadBtn };
+}
+
 function decodeJwt(token) {
   try {
     const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
@@ -50,18 +107,83 @@ function uploadToS3(url, file, onProgress) {
   });
 }
 
-async function uploadFile(file, statusEl) {
-  if (!file) return;
-  statusEl.textContent = "Requesting upload URL...";
-  try {
-    const { url } = await getPresignedUrl(file.name);
-    statusEl.innerHTML = "Uploading... <progress value='0' max='1' style='width:100%'></progress>";
-    const prog = statusEl.querySelector("progress");
-    await uploadToS3(url, file, p => (prog.value = p));
-    statusEl.textContent = "Upload successful";
-  } catch (e) {
-    statusEl.textContent = "Error: " + e.message;
+async function handleFileUpload(file, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (!file || !isAcceptedFile(file)) {
+    container.innerHTML = '<div class="error-message">Error: Only JSON or TXT files are allowed.</div>';
+    return;
   }
+
+  const ui = setupFileUploadUI(containerId, file);
+  if (!ui) return;
+
+  const { progress, status, uploadBtn } = ui;
+
+  uploadBtn.addEventListener('click', async () => {
+    uploadBtn.disabled = true;
+    progress.style.display = 'block';
+    progress.value = 0;
+    status.textContent = 'Requesting upload URL...';
+
+    try {
+      const { url } = await getPresignedUrl(file.name);
+      status.textContent = 'Uploading...';
+      await uploadToS3(url, file, p => (progress.value = p));
+      status.textContent = 'Upload successful';
+      progress.style.display = 'none';
+      uploadBtn.style.display = 'none';
+    } catch (err) {
+      console.error(err);
+      status.textContent = `Upload failed: ${err.message}`;
+      progress.style.display = 'none';
+      uploadBtn.disabled = false;
+    }
+  });
+}
+
+function setupDragAndDrop(dropZoneId, fileInputId) {
+  const dropZone = document.getElementById(dropZoneId);
+  const fileInput = document.getElementById(fileInputId);
+  if (!dropZone || !fileInput) return;
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+    });
+  });
+
+  dropZone.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    if (!isAcceptedFile(file)) {
+      const status = dropZone.querySelector('.upload-status') || dropZone;
+      status.innerHTML = '<div class="error-message">Error: Only JSON or TXT files are allowed.</div>';
+      return;
+    }
+
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+    handleFileUpload(file, dropZone.id);
+  });
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (file) {
+      handleFileUpload(file, dropZone.id);
+    }
+  });
 }
 
 function handleAuth() {
@@ -85,22 +207,37 @@ function handleAuth() {
 
 function init() {
   handleAuth();
-  document.getElementById("signInBtn").addEventListener("click", redirectToLogin);
-  document.getElementById("signOutBtn").addEventListener("click", redirectToLogout);
+  document.getElementById("signInBtn")?.addEventListener("click", redirectToLogin);
+  document.getElementById("signOutBtn")?.addEventListener("click", redirectToLogout);
 
-  document.getElementById("privateUploadBtn").addEventListener("click", () => {
-    const file = document.getElementById("privateFile").files[0];
-    uploadFile(file, "private", document.getElementById("privateStatus"));
-  });
-  document.getElementById("collectiveUploadBtn").addEventListener("click", () => {
-    const file = document.getElementById("collectiveFile").files[0];
-    uploadFile(file, "collective", document.getElementById("collectiveStatus"));
-  });
-  document.getElementById("qaForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    // Placeholder for question handling
-    alert("Question submitted: " + document.getElementById("questionInput").value);
-  });
+  // Setup private file upload
+  setupDragAndDrop("privateDropZone", "privateFile");
+  const privateFileInput = document.getElementById("privateFile");
+  if (privateFileInput) {
+    privateFileInput.accept = ".json,.txt";
+  }
+
+  // Setup collective file upload
+  setupDragAndDrop("collectiveDropZone", "collectiveFile");
+  const collectiveFileInput = document.getElementById("collectiveFile");
+  if (collectiveFileInput) {
+    collectiveFileInput.accept = ".json,.txt";
+  }
+
+  // Setup Q&A form
+  const qaForm = document.getElementById("qaForm");
+  if (qaForm) {
+    qaForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      // Placeholder for question handling
+      alert("Question submitted: " + document.getElementById("questionInput").value);
+    });
+  }
 }
 
-document.addEventListener("DOMContentLoaded", init);
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}

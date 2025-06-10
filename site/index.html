@@ -174,6 +174,13 @@
     </div>
   </footer>
 
-  <script type="module" src="main.js"></script>
+  <script>
+    // Add error handling for script loading
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      console.error('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
+      return false;
+    };
+  </script>
+  <script type="module" src="main.js" onerror="console.error('Failed to load main.js')"></script>
 </body>
 </html>
