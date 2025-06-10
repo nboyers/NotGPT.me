@@ -1,108 +1,586 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HumanTone - Docs</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Documentation | TikTok Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="styles-base.css" rel="stylesheet">
+  <link href="styles-components.css" rel="stylesheet">
+  <link href="styles-layout.css" rel="stylesheet">
   <style>
-    body { margin:0; font-family: 'Inter', sans-serif; background:#0f0f11; color:#fff; }
-.navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #232428e6;
-  padding: 1rem 2rem;
-  border-radius: 0 0 16px 16px;
-  box-shadow: 0 2px 8px #10121725;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.navbar-brand {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-.navbar-brand a {
-  color: #ffffff;
-  text-decoration: none;
-}
-
-.navbar-links {
-  list-style: none;
-  display: flex;
-  gap: 1.5rem;
-  margin: 0;
-  padding: 0;
-}
-
-.navbar-links li a {
-  color: #e2e2e2;
-  font-size: 1rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.navbar-links li a:hover {
-  color: #7bdcff;
-}
-
-.navbar-actions button {
-  background: #fff;
-  color: #000;
-  font-weight: 600;
-  border: none;
-  border-radius: 10px;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.navbar-actions button:hover {
-  background: #f1f1f1;
-}
-
-@media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .navbar-links {
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-  }
-
-  .navbar-actions {
-    align-self: flex-end;
-    margin-top: 0.5rem;
-  }
-}
-
-    .container { padding:2rem; max-width:800px; margin:0 auto; }
+    .docs-container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    
+    .docs-sidebar {
+      position: sticky;
+      top: 100px;
+      height: fit-content;
+      background: rgba(26, 28, 31, 0.7);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    
+    .docs-sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .docs-sidebar li {
+      margin-bottom: 0.5rem;
+    }
+    
+    .docs-sidebar a {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      color: var(--muted-text);
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    
+    .docs-sidebar a:hover, .docs-sidebar a.active {
+      background: rgba(67, 97, 238, 0.1);
+      color: var(--primary-light);
+    }
+    
+    .docs-sidebar h4 {
+      font-size: 1rem;
+      margin: 1.5rem 0 0.5rem;
+      padding-left: 0.75rem;
+      color: var(--light-text);
+    }
+    
+    .docs-content {
+      background: rgba(26, 28, 31, 0.7);
+      border-radius: 16px;
+      padding: 2rem;
+    }
+    
+    .docs-section {
+      margin-bottom: 3rem;
+    }
+    
+    .docs-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .docs-section h2 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(63, 65, 80, 0.3);
+    }
+    
+    .docs-section h3 {
+      font-size: 1.5rem;
+      margin: 2rem 0 1rem;
+    }
+    
+    .docs-section p, .docs-section ul, .docs-section ol {
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+    
+    .docs-section ul, .docs-section ol {
+      padding-left: 1.5rem;
+    }
+    
+    .docs-section li {
+      margin-bottom: 0.5rem;
+    }
+    
+    .docs-section code {
+      background: rgba(15, 15, 17, 0.5);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+    
+    .docs-section pre {
+      background: rgba(15, 15, 17, 0.5);
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+    }
+    
+    .docs-section pre code {
+      background: transparent;
+      padding: 0;
+    }
+    
+    .docs-section .note {
+      background: rgba(67, 97, 238, 0.1);
+      border-left: 4px solid var(--primary-color);
+      padding: 1rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.5rem 0;
+    }
+    
+    .docs-section .warning {
+      background: rgba(247, 37, 133, 0.1);
+      border-left: 4px solid var(--accent-color);
+      padding: 1rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.5rem 0;
+    }
+    
+    .docs-section img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+    }
+    
+    @media (max-width: 768px) {
+      .docs-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .docs-sidebar {
+        position: static;
+        margin-bottom: 2rem;
+      }
+    }
   </style>
 </head>
 <body>
+  <video autoplay muted loop playsinline class="background-video" onerror="this.style.display='none'">
+    <source src="./media/background2.mp4" type="video/mp4">
+  </video>
+
+  <!-- Navigation -->
   <nav class="navbar">
-     <div class="navbar-brand"><a href="index.html">HumanTone</a></div>
-    <ul class="navbar-links" style="list-style:none; display:flex; gap:1rem; margin:0; padding:0;">
+    <div class="navbar-brand">
+      <a href="index.html">
+        <img src="https://assets.codepen.io/123865/internal/avatars/users/default.png?fit=crop&format=auto&height=80&version=1&width=80" alt="TikTok Analytics Logo">
+        TikTok Analytics
+      </a>
+    </div>
+    <ul class="navbar-links">
       <li><a href="insights.html">Collective Insights</a></li>
-      <li><a href="api.html">Developer API</a></li>
+      <li><a href="features.html">Features</a></li>
       <li><a href="pricing.html">Pricing</a></li>
-      <li><a href="docs.html">Docs</a></li>
-  </ul>
-  <div class="navbar-actions">
-    <button id="signInBtn">Sign In</button>
-  </div>
+      <li><a href="docs.html" class="active">Documentation</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <button id="signInBtn" class="btn btn-primary">Sign In</button>
+    </div>
   </nav>
+
+  <!-- Documentation Content -->
   <div class="container">
-    <h1>Documentation</h1>
-    <p>Coming soon.</p>
+    <section class="docs-header">
+      <h1>Documentation</h1>
+      <p>Everything you need to know about using TikTok Analytics</p>
+    </section>
+    
+    <div class="docs-container">
+      <aside class="docs-sidebar">
+        <h4>Getting Started</h4>
+        <ul>
+          <li><a href="#introduction" class="active">Introduction</a></li>
+          <li><a href="#account-setup">Account Setup</a></li>
+        </ul>
+        
+        <h4>Data Management</h4>
+        <ul>
+          <li><a href="#uploading-data">Uploading TikTok Data</a></li>
+          <li><a href="#data-privacy">Data Privacy</a></li>
+        </ul>
+        
+        <h4>Analytics</h4>
+        <ul>
+          <li><a href="#dashboard-overview">Dashboard Overview</a></li>
+          <li><a href="#metrics-explained">Metrics Explained</a></li>
+          <li><a href="#collective-insights">Collective Insights</a></li>
+        </ul>
+        
+        <h4>Features</h4>
+        <ul>
+          <li><a href="#bedrock-qa">Bedrock-Powered Q&A</a></li>
+          <li><a href="#data-export">Data Export</a></li>
+        </ul>
+        
+        <h4>Support</h4>
+        <ul>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#contact-support">Contact Support</a></li>
+        </ul>
+      </aside>
+      
+      <div class="docs-content">
+        <section id="introduction" class="docs-section">
+          <h2>Introduction</h2>
+          <p>TikTok Analytics is a powerful platform that helps creators understand their TikTok performance data. Our platform transforms complex TikTok data exports into actionable insights, helping you grow your audience and optimize your content strategy.</p>
+          
+          <p>This documentation will guide you through all aspects of using our platform, from uploading your TikTok data to interpreting analytics and leveraging our AI-powered features.</p>
+          
+          <div class="note">
+            <strong>Note:</strong> TikTok Analytics is not affiliated with TikTok or ByteDance Ltd. We are an independent analytics platform that helps you understand your TikTok data.
+          </div>
+        </section>
+        
+        <section id="account-setup" class="docs-section">
+          <h2>Account Setup</h2>
+          <h3>Creating Your Account</h3>
+          <p>To get started with TikTok Analytics, you'll need to create an account:</p>
+          <ol>
+            <li>Click the "Sign In" button in the top navigation bar</li>
+            <li>Select "Create Account" on the login screen</li>
+            <li>Enter your email address and create a password</li>
+            <li>Verify your email address by clicking the link sent to your inbox</li>
+          </ol>
+          
+          <h3>Login Flow</h3>
+          <p>Our secure login process uses Amazon Cognito for authentication. Here's how it works:</p>
+          <ol>
+            <li>Click "Sign In" in the navigation bar</li>
+            <li>Enter your email and password</li>
+            <li>For added security, you may be prompted for multi-factor authentication if enabled</li>
+            <li>Once authenticated, you'll be redirected to your personalized dashboard</li>
+          </ol>
+          
+          <div class="note">
+            <strong>Pro Tip:</strong> Enable two-factor authentication in your account settings for enhanced security.
+          </div>
+        </section>
+        
+        <section id="uploading-data" class="docs-section">
+          <h2>Uploading TikTok Data</h2>
+          <h3>How to Request Your TikTok Data</h3>
+          <p>Before you can use TikTok Analytics, you'll need to request your data from TikTok:</p>
+          <ol>
+            <li>Open the TikTok app and go to your profile</li>
+            <li>Tap the three lines in the top right corner to access settings</li>
+            <li>Go to "Privacy" → "Personalization and data" → "Download your data"</li>
+            <li>Select "Request data file" and choose JSON format</li>
+            <li>Wait for TikTok to prepare your data (this can take up to 4 days)</li>
+            <li>Once ready, download your data file from TikTok</li>
+          </ol>
+          
+          <h3>Uploading Your Data to TikTok Analytics</h3>
+          <p>Once you have your TikTok data file, you can upload it to our platform:</p>
+          <ol>
+            <li>Log in to your TikTok Analytics account</li>
+            <li>Navigate to the "Upload Data" section in your dashboard</li>
+            <li>Drag and drop your TikTok JSON or TXT file into the upload area, or click "Browse Files" to select it</li>
+            <li>Wait for the upload and processing to complete</li>
+            <li>Once processed, you'll be redirected to your personalized insights dashboard</li>
+          </ol>
+          
+          <div class="warning">
+            <strong>Important:</strong> We only support official TikTok data exports in JSON or TXT format. Modified files may not process correctly.
+          </div>
+        </section>
+        
+        <section id="data-privacy" class="docs-section">
+          <h2>Data Privacy</h2>
+          <p>At TikTok Analytics, we take your data privacy seriously. Here's how we protect your information:</p>
+          
+          <h3>How We Handle Your Data</h3>
+          <ul>
+            <li><strong>Encryption:</strong> All data is encrypted both in transit and at rest using industry-standard encryption protocols</li>
+            <li><strong>Secure Storage:</strong> Your data is stored in secure AWS S3 buckets with strict access controls</li>
+            <li><strong>Data Ownership:</strong> You retain full ownership of your data and can delete it at any time</li>
+            <li><strong>No Data Selling:</strong> We never sell your personal data to third parties</li>
+          </ul>
+          
+          <h3>Collective Insights and Anonymization</h3>
+          <p>For our Collective Insights feature, we aggregate and anonymize data to provide industry benchmarks and trends. This process ensures that:</p>
+          <ul>
+            <li>All personally identifiable information is removed</li>
+            <li>Data is aggregated across many users to prevent individual identification</li>
+            <li>You can opt out of contributing to collective insights in your account settings</li>
+          </ul>
+          
+          <div class="note">
+            <strong>Note:</strong> For more detailed information about how we handle your data, please refer to our <a href="privacy.html">Privacy Policy</a>.
+          </div>
+        </section>
+        
+        <section id="dashboard-overview" class="docs-section">
+          <h2>Dashboard Overview</h2>
+          <p>Your TikTok Analytics dashboard provides a comprehensive view of your TikTok performance. Here's what you'll find:</p>
+          
+          <h3>Key Sections</h3>
+          <ul>
+            <li><strong>Performance Summary:</strong> At-a-glance metrics showing your overall TikTok performance</li>
+            <li><strong>Content Performance:</strong> Detailed analytics on your individual TikTok videos</li>
+            <li><strong>Audience Insights:</strong> Demographics and behavior patterns of your viewers</li>
+            <li><strong>Growth Trends:</strong> Charts showing your follower and engagement growth over time</li>
+            <li><strong>Q&A Section:</strong> Ask questions about your data using our Bedrock-powered AI assistant</li>
+          </ul>
+          
+          <h3>Customizing Your Dashboard</h3>
+          <p>You can customize your dashboard to focus on the metrics that matter most to you:</p>
+          <ul>
+            <li>Rearrange dashboard widgets by dragging and dropping</li>
+            <li>Filter data by date range using the date selector</li>
+            <li>Save custom views for quick access</li>
+            <li>Export charts and data for use in presentations or reports</li>
+          </ul>
+        </section>
+        
+        <section id="metrics-explained" class="docs-section">
+          <h2>Metrics Explained</h2>
+          <p>Understanding your analytics metrics is key to improving your TikTok strategy. Here's what each metric means:</p>
+          
+          <h3>Engagement Metrics</h3>
+          <ul>
+            <li><strong>Views:</strong> The number of times your video has been viewed</li>
+            <li><strong>Likes:</strong> The number of likes your video has received</li>
+            <li><strong>Comments:</strong> The number of comments on your video</li>
+            <li><strong>Shares:</strong> How many times your video has been shared</li>
+            <li><strong>Engagement Rate:</strong> The percentage of viewers who engaged with your content (likes, comments, shares)</li>
+          </ul>
+          
+          <h3>Audience Metrics</h3>
+          <ul>
+            <li><strong>Follower Growth:</strong> The rate at which you're gaining new followers</li>
+            <li><strong>Audience Demographics:</strong> Age, location, and gender breakdown of your viewers</li>
+            <li><strong>Active Hours:</strong> When your audience is most active on TikTok</li>
+          </ul>
+          
+          <h3>Content Performance Metrics</h3>
+          <ul>
+            <li><strong>Watch Time:</strong> The average duration viewers watch your videos</li>
+            <li><strong>Completion Rate:</strong> The percentage of viewers who watch your entire video</li>
+            <li><strong>Traffic Sources:</strong> Where viewers are finding your content (For You Page, Following, Search, etc.)</li>
+          </ul>
+        </section>
+        
+        <section id="collective-insights" class="docs-section">
+          <h2>Collective Insights</h2>
+          <p>Our Collective Insights feature provides valuable benchmarks and trends based on anonymized, aggregated data from our user community.</p>
+          
+          <h3>Available Insights</h3>
+          <ul>
+            <li><strong>Trending Topics:</strong> See what topics and hashtags are currently performing well</li>
+            <li><strong>Industry Benchmarks:</strong> Compare your performance against creators in your niche</li>
+            <li><strong>Content Strategy Recommendations:</strong> Data-driven suggestions for optimal video length, posting times, and more</li>
+          </ul>
+          
+          <h3>How to Use Collective Insights</h3>
+          <p>To get the most out of Collective Insights:</p>
+          <ol>
+            <li>Navigate to the "Collective Insights" tab in the main navigation</li>
+            <li>Use the category filters to narrow down to your specific niche</li>
+            <li>Compare your own metrics against the benchmarks</li>
+            <li>Read the insight articles for actionable recommendations</li>
+          </ol>
+          
+          <div class="note">
+            <strong>Note:</strong> Collective Insights are available to all users, but Pro and Enterprise users get access to more detailed benchmarks and filtering options.
+          </div>
+        </section>
+        
+        <section id="bedrock-qa" class="docs-section">
+          <h2>Bedrock-Powered Q&A</h2>
+          <p>Our AI-powered Q&A feature uses Amazon Bedrock to provide intelligent answers to your questions about your TikTok data.</p>
+          
+          <h3>How It Works</h3>
+          <p>The Q&A feature analyzes your TikTok data and uses advanced natural language processing to understand and answer your questions. You can ask about:</p>
+          <ul>
+            <li>Performance trends and patterns</li>
+            <li>Content optimization recommendations</li>
+            <li>Audience behavior insights</li>
+            <li>Specific metrics and their meaning</li>
+          </ul>
+          
+          <h3>Example Questions</h3>
+          <p>Here are some examples of questions you can ask:</p>
+          <ul>
+            <li>"What type of content is performing best for me?"</li>
+            <li>"When is the best time for me to post?"</li>
+            <li>"Why did my engagement drop last week?"</li>
+            <li>"How can I improve my completion rate?"</li>
+            <li>"Which hashtags are working best for my content?"</li>
+          </ul>
+          
+          <h3>Using the Q&A Feature</h3>
+          <ol>
+            <li>Navigate to the Q&A section in your dashboard</li>
+            <li>Type your question in the input field</li>
+            <li>Click "Ask" or press Enter</li>
+            <li>Wait for the AI to analyze your data and provide an answer</li>
+            <li>Follow up with additional questions for more detailed insights</li>
+          </ol>
+        </section>
+        
+        <section id="data-export" class="docs-section">
+          <h2>Data Export</h2>
+          <p>TikTok Analytics allows you to export your processed data and insights for use in other tools or presentations.</p>
+          
+          <h3>Export Options</h3>
+          <ul>
+            <li><strong>CSV Export:</strong> Download raw data in CSV format for use in spreadsheet applications</li>
+            <li><strong>PDF Reports:</strong> Generate professional PDF reports with key insights and visualizations</li>
+            <li><strong>Image Export:</strong> Download individual charts and graphs as PNG or JPG files</li>
+          </ul>
+          
+          <h3>How to Export Data</h3>
+          <ol>
+            <li>Navigate to the dashboard or report you want to export</li>
+            <li>Click the "Export" button in the top right corner</li>
+            <li>Select your preferred export format</li>
+            <li>Choose what data to include in your export</li>
+            <li>Click "Generate Export" and wait for the file to be prepared</li>
+            <li>Download the file when ready</li>
+          </ol>
+          
+          <div class="note">
+            <strong>Pro Tip:</strong> Pro and Enterprise users can set up automated weekly or monthly report exports delivered directly to their email.
+          </div>
+        </section>
+        
+        <section id="faq" class="docs-section">
+          <h2>Frequently Asked Questions</h2>
+          
+          <h3>General Questions</h3>
+          
+          <h4>Is TikTok Analytics affiliated with TikTok?</h4>
+          <p>No, TikTok Analytics is an independent platform not affiliated with TikTok or ByteDance Ltd.</p>
+          
+          <h4>Do I need a TikTok Pro/Creator account to use TikTok Analytics?</h4>
+          <p>No, any TikTok user can request their data and use our platform. However, having a Pro/Creator account on TikTok provides more detailed data in your export.</p>
+          
+          <h3>Data Questions</h3>
+          
+          <h4>How often should I upload new TikTok data?</h4>
+          <p>For the most accurate insights, we recommend uploading fresh data at least once a month. Pro and Enterprise users can set up automated data refresh workflows.</p>
+          
+          <h4>Is my data secure?</h4>
+          <p>Yes, we use industry-standard encryption and security practices to protect your data. See our <a href="#data-privacy">Data Privacy</a> section for more details.</p>
+          
+          <h3>Account Questions</h3>
+          
+          <h4>Can I analyze multiple TikTok accounts with one TikTok Analytics account?</h4>
+          <p>Yes, Pro and Enterprise users can manage multiple TikTok accounts under a single TikTok Analytics account.</p>
+          
+          <h4>How do I cancel my subscription?</h4>
+          <p>You can cancel your subscription at any time from your Account Settings page. Your access will continue until the end of your current billing period.</p>
+        </section>
+        
+        <section id="contact-support" class="docs-section">
+          <h2>Contact Support</h2>
+          <p>Need help with something not covered in our documentation? Our support team is here to help.</p>
+          
+          <h3>Support Options</h3>
+          <ul>
+            <li><strong>Email Support:</strong> <a href="mailto:support@tiktokanalytics.com">support@tiktokanalytics.com</a></li>
+            <li><strong>Live Chat:</strong> Available Monday-Friday, 9am-5pm EST (Pro and Enterprise users)</li>
+            <li><strong>Knowledge Base:</strong> <a href="#">Browse our knowledge base articles</a></li>
+          </ul>
+          
+          <h3>Reporting Issues</h3>
+          <p>When reporting technical issues, please include:</p>
+          <ul>
+            <li>Your account email address</li>
+            <li>A detailed description of the issue</li>
+            <li>Steps to reproduce the problem</li>
+            <li>Screenshots if applicable</li>
+            <li>Browser and device information</li>
+          </ul>
+          
+          <div class="note">
+            <strong>Response Times:</strong> We aim to respond to all support inquiries within 24 hours. Pro and Enterprise users receive priority support with faster response times.
+          </div>
+        </section>
+      </div>
+    </div>
   </div>
-  <script type="module" src="main.js"></script>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="https://assets.codepen.io/123865/internal/avatars/users/default.png?fit=crop&format=auto&height=80&version=1&width=80" alt="TikTok Analytics Logo">
+          <p>Transforming TikTok data into actionable insights for creators and brands.</p>
+        </div>
+        <div class="footer-links">
+          <h4>Platform</h4>
+          <ul>
+            <li><a href="features.html">Features</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="docs.html">Documentation</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-copyright">
+          © 2023 TikTok Analytics. All rights reserved.
+        </div>
+        <div class="footer-social">
+          <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+          <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+          <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+        
+        // Update active state
+        document.querySelectorAll('.docs-sidebar a').forEach(link => {
+          link.classList.remove('active');
+        });
+        this.classList.add('active');
+      });
+    });
+    
+    // Update active state on scroll
+    window.addEventListener('scroll', function() {
+      const sections = document.querySelectorAll('.docs-section');
+      const navLinks = document.querySelectorAll('.docs-sidebar a');
+      
+      let currentSection = '';
+      
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 100;
+        const sectionHeight = section.clientHeight;
+        if (pageYOffset >= sectionTop && pageYOffset < sectionTop + sectionHeight) {
+          currentSection = section.getAttribute('id');
+        }
+      });
+      
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${currentSection}`) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
 </body>
 </html>

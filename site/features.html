@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Features | TikTok Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="styles-base.css" rel="stylesheet">
+  <link href="styles-components.css" rel="stylesheet">
+  <link href="styles-layout.css" rel="stylesheet">
+  <style>
+    .features-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+    
+    .features-header h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    
+    .features-header p {
+      font-size: 1.2rem;
+      color: var(--muted-text);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    .feature-section {
+      margin-bottom: 6rem;
+    }
+    
+    .feature-section:last-child {
+      margin-bottom: 2rem;
+    }
+    
+    .feature-section-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    
+    .feature-section-header h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .feature-section-header p {
+      font-size: 1.1rem;
+      color: var(--muted-text);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    
+    .feature-item {
+      background: rgba(26, 28, 31, 0.7);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: transform 0.3s, box-shadow 0.3s;
+      border: 1px solid rgba(63, 65, 80, 0.2);
+    }
+    
+    .feature-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(16, 18, 23, 0.2);
+    }
+    
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(67, 97, 238, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .feature-icon svg {
+      width: 30px;
+      height: 30px;
+      color: var(--primary-light);
+    }
+    
+    .feature-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--light-text);
+    }
+    
+    .feature-description {
+      color: var(--muted-text);
+      line-height: 1.6;
+    }
+    
+    .feature-highlight {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+      margin-bottom: 6rem;
+    }
+    
+    .feature-highlight-image {
+      background: rgba(26, 28, 31, 0.5);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(16, 18, 23, 0.2);
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .feature-highlight-image img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    .feature-highlight-content h3 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .feature-highlight-content p {
+      font-size: 1.1rem;
+      color: var(--muted-text);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    
+    .feature-highlight-content ul {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 2rem;
+    }
+    
+    .feature-highlight-content li {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+    
+    .feature-highlight-content li svg {
+      margin-right: 0.75rem;
+      min-width: 20px;
+      color: var(--primary-light);
+    }
+    
+    .feature-highlight:nth-child(even) {
+      grid-template-columns: 1fr 1fr;
+    }
+    
+    .feature-highlight:nth-child(odd) {
+      grid-template-columns: 1fr 1fr;
+    }
+    
+    .feature-highlight:nth-child(odd) .feature-highlight-image {
+      order: 2;
+    }
+    
+    .feature-highlight:nth-child(odd) .feature-highlight-content {
+      order: 1;
+    }
+    
+    @media (max-width: 768px) {
+      .feature-highlight {
+        grid-template-columns: 1fr !important;
+        gap: 2rem;
+      }
+      
+      .feature-highlight-image,
+      .feature-highlight-content {
+        order: unset !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <video autoplay muted loop playsinline class="background-video" onerror="this.style.display='none'">
+    <source src="./media/background2.mp4" type="video/mp4">
+  </video>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a href="index.html">
+        <img src="https://assets.codepen.io/123865/internal/avatars/users/default.png?fit=crop&format=auto&height=80&version=1&width=80" alt="TikTok Analytics Logo">
+        TikTok Analytics
+      </a>
+    </div>
+    <ul class="navbar-links">
+      <li><a href="insights.html">Collective Insights</a></li>
+      <li><a href="features.html" class="active">Features</a></li>
+      <li><a href="pricing.html">Pricing</a></li>
+      <li><a href="docs.html">Documentation</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <button id="signInBtn" class="btn btn-primary">Sign In</button>
+    </div>
+  </nav>
+
+  <!-- Features Content -->
+  <div class="container">
+    <section class="features-header">
+      <h1>Powerful Features for TikTok Creators</h1>
+      <p>Everything you need to understand your TikTok performance and grow your audience</p>
+    </section>
+    
+    <!-- Feature Highlights -->
+    <div class="feature-highlight">
+      <div class="feature-highlight-image">
+        <img src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80" alt="Secure TikTok Data Upload">
+      </div>
+      <div class="feature-highlight-content">
+        <h3>Secure TikTok Data Uploads</h3>
+        <p>Upload your TikTok data exports securely and transform them into actionable insights. Our platform handles the complex data processing so you don't have to.</p>
+        <ul>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            End-to-end encryption for all data transfers
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Support for official TikTok JSON and TXT exports
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Automatic data cleaning and normalization
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            AWS-powered secure storage with strict access controls
+          </li>
+        </ul>
+        <a href="docs.html#uploading-data" class="btn btn-primary">Learn How to Upload</a>
+      </div>
+    </div>
+    
+    <div class="feature-highlight">
+      <div class="feature-highlight-image">
+        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="Personalized Analytics Dashboard">
+      </div>
+      <div class="feature-highlight-content">
+        <h3>Personalized Analytics Dashboard</h3>
+        <p>Get a comprehensive view of your TikTok performance with our intuitive, customizable dashboard. Track all the metrics that matter to your growth strategy.</p>
+        <ul>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Real-time performance metrics and trends
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Content performance analysis by video
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Audience demographics and behavior insights
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Customizable widgets and data visualizations
+          </li>
+        </ul>
+        <a href="#" class="btn btn-primary">See Dashboard Demo</a>
+      </div>
+    </div>
+    
+    <div class="feature-highlight">
+      <div class="feature-highlight-image">
+        <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="Collective Insights">
+      </div>
+      <div class="feature-highlight-content">
+        <h3>Collective Insights</h3>
+        <p>Gain valuable perspective by comparing your performance against anonymized, aggregated data from our community of creators. Discover trends and benchmarks relevant to your niche.</p>
+        <ul>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Industry benchmarks and performance comparisons
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Trending topics and hashtags in your category
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Content strategy recommendations based on collective data
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Privacy-first approach with anonymized data
+          </li>
+        </ul>
+        <a href="insights.html" class="btn btn-primary">Explore Collective Insights</a>
+      </div>
+    </div>
+    
+    <div class="feature-highlight">
+      <div class="feature-highlight-image">
+        <img src="https://images.unsplash.com/photo-1596526131083-e8c633c948d2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80" alt="AI-Powered Q&A">
+      </div>
+      <div class="feature-highlight-content">
+        <h3>Natural Language Q&A Powered by Bedrock</h3>
+        <p>Ask questions about your TikTok data in plain English and get intelligent, data-driven answers. Our AI assistant helps you uncover insights without needing to be a data expert.</p>
+        <ul>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Powered by Amazon Bedrock's advanced AI models
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Ask questions in natural language about your performance
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Get personalized content strategy recommendations
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Continuous learning from your data patterns
+          </li>
+        </ul>
+        <a href="docs.html#bedrock-qa" class="btn btn-primary">Learn About Q&A</a>
+      </div>
+    </div>
+    
+    <!-- Feature Grid Section -->
+    <section class="feature-section">
+      <div class="feature-section-header">
+        <h2>More Powerful Features</h2>
+        <p>Explore all the tools and capabilities that make TikTok Analytics the ultimate platform for creators</p>
+      </div>
+      
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </div>
+          <h3 class="feature-title">Data Export</h3>
+          <p class="feature-description">Export your processed data and insights in CSV or PDF format for use in presentations, reports, or other analytics tools.</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+          </div>
+          <h3 class="feature-title">Custom Dashboards</h3>
+          <p class="feature-description">Create personalized dashboards that focus on the metrics that matter most to your content strategy and growth goals.</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <h3 class="feature-title">Audience Insights</h3>
+          <p class="feature-description">Understand who your viewers are with detailed demographic data, viewing habits, and engagement patterns.</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+          </div>
+          <h3 class="feature-title">Content Planning</h3>
+          <p class="feature-description">Plan your content strategy based on data-driven recommendations for optimal posting times, content types, and hashtags.</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <h3 class="feature-title">Performance Alerts</h3>
+          <p class="feature-description">Receive notifications about significant changes in your performance metrics, viral potential, or engagement spikes.</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <h3 class="feature-title">Privacy Controls</h3>
+          <p class="feature-description">Maintain complete control over your data with granular privacy settings and the ability to delete your data at any time.</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- CTA Section -->
+    <section class="cta-section">
+      <div class="container">
+        <h2>Ready to Transform Your TikTok Strategy?</h2>
+        <p>Join thousands of creators who are using data to grow their audience</p>
+        <button class="btn btn-accent">Get Started Free</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="https://assets.codepen.io/123865/internal/avatars/users/default.png?fit=crop&format=auto&height=80&version=1&width=80" alt="TikTok Analytics Logo">
+          <p>Transforming TikTok data into actionable insights for creators and brands.</p>
+        </div>
+        <div class="footer-links">
+          <h4>Platform</h4>
+          <ul>
+            <li><a href="features.html">Features</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="docs.html">Documentation</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-copyright">
+          © 2023 TikTok Analytics. All rights reserved.
+        </div>
+        <div class="footer-social">
+          <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+          <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+          <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

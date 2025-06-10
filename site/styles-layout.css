@@ -1,0 +1,189 @@
+/* Layout Styles for TikTok Analytics Platform */
+
+/* Hero Section */
+.hero-section {
+  padding: 6rem 0 4rem;
+  text-align: center;
+}
+
+.hero-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(90deg, var(--primary-light), var(--accent-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  font-size: 1.5rem;
+  color: var(--muted-text);
+  margin-bottom: 2.5rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Upload Section */
+.upload-section {
+  padding: 2rem 0 4rem;
+}
+
+/* Features Section */
+.features-section {
+  padding: 5rem 0;
+  background: rgba(15, 15, 17, 0.7);
+  border-radius: 24px;
+  margin: 2rem 0;
+}
+
+/* Dashboard Layout */
+.dashboard {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 2rem;
+  min-height: calc(100vh - 80px);
+}
+
+.sidebar {
+  background: rgba(26, 28, 31, 0.8);
+  border-radius: 16px;
+  padding: 2rem;
+  position: sticky;
+  top: 100px;
+  height: calc(100vh - 120px);
+}
+
+.main-content {
+  padding: 2rem 0;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Authenticated User Dashboard */
+.user-dashboard {
+  padding: 2rem 0;
+}
+
+.dashboard-welcome {
+  margin-bottom: 2rem;
+}
+
+.dashboard-welcome h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-welcome p {
+  color: var(--muted-text);
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.dashboard-card {
+  background: rgba(26, 28, 31, 0.7);
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid rgba(63, 65, 80, 0.2);
+}
+
+.dashboard-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Q&A Section */
+.qa-section {
+  padding: 4rem 0;
+}
+
+.qa-container {
+  background: rgba(26, 28, 31, 0.7);
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid rgba(63, 65, 80, 0.2);
+}
+
+/* Collective Insights Page */
+.insights-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.insights-header h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.insights-header p {
+  font-size: 1.2rem;
+  color: var(--muted-text);
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+/* Responsive Layouts */
+@media (max-width: 1024px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+  
+  .sidebar {
+    position: static;
+    height: auto;
+    margin-bottom: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-buttons {
+    flex-direction: column;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 4rem 0 2rem;
+  }
+}

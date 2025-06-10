@@ -1,107 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HumanTone - Collective Insights</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    body { margin:0; font-family: 'Inter', sans-serif; background:#0f0f11; color:#fff; }
-.navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #232428e6;
-  padding: 1rem 2rem;
-  border-radius: 0 0 16px 16px;
-  box-shadow: 0 2px 8px #10121725;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.navbar-brand {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-.navbar-brand a {
-  color: #ffffff;
-  text-decoration: none;
-}
-
-.navbar-links {
-  list-style: none;
-  display: flex;
-  gap: 1.5rem;
-  margin: 0;
-  padding: 0;
-}
-
-.navbar-links li a {
-  color: #e2e2e2;
-  font-size: 1rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.navbar-links li a:hover {
-  color: #7bdcff;
-}
-
-.navbar-actions button {
-  background: #fff;
-  color: #000;
-  font-weight: 600;
-  border: none;
-  border-radius: 10px;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.navbar-actions button:hover {
-  background: #f1f1f1;
-}
-
-@media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .navbar-links {
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-  }
-
-  .navbar-actions {
-    align-self: flex-end;
-    margin-top: 0.5rem;
-  }
-}
-    .container { padding:2rem; max-width:800px; margin:0 auto; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Collective Insights | TikTok Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="styles-base.css" rel="stylesheet">
+  <link href="styles-components.css" rel="stylesheet">
+  <link href="styles-layout.css" rel="stylesheet">
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
 </head>
 <body>
+  <video autoplay muted loop playsinline class="background-video" onerror="this.style.display='none'">
+    <source src="./media/background2.mp4" type="video/mp4">
+  </video>
+
+  <!-- Navigation -->
   <nav class="navbar">
-     <div class="navbar-brand"><a href="index.html">HumanTone</a></div>
-    <ul class="navbar-links" style="list-style:none; display:flex; gap:1rem; margin:0; padding:0;">
-      <li><a href="insights.html">Collective Insights</a></li>
-      <li><a href="api.html">Developer API</a></li>
+    <div class="navbar-brand">
+      <a href="index.html">
+        <img src="https://assets.codepen.io/123865/internal/avatars/users/default.png?fit=crop&format=auto&height=80&version=1&width=80" alt="TikTok Analytics Logo">
+        TikTok Analytics
+      </a>
+    </div>
+    <ul class="navbar-links">
+      <li><a href="insights.html" class="active">Collective Insights</a></li>
+      <li><a href="features.html">Features</a></li>
       <li><a href="pricing.html">Pricing</a></li>
-      <li><a href="docs.html">Docs</a></li>
-  </ul>
-  <div class="navbar-actions">
-    <button id="signInBtn">Sign In</button>
-  </div>
+      <li><a href="docs.html">Documentation</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <button id="signInBtn" class="btn btn-primary">Sign In</button>
+    </div>
   </nav>
-  <div class="container">
-    <h1>Collective Insights</h1>
-    <p>Coming soon.</p>
-  </div>
+
+  <!-- Insights Header -->
+  <section class="insights-header">
+    <div class="container">
+      <h1>Collective TikTok Insights</h1>
+      <p>Discover trends and patterns from our community of creators. These insights are generated from anonymized, aggregated data.</p>
+    </div>
+  </section>
+
+  <!-- Insights Content -->
+  <section class="container">
+    <!-- Trending Topics -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <h3 class="chart-title">Trending Topics This Month</h3>
+        <div class="chart-actions">
+          <button class="btn btn-secondary" id="filterTopicsBtn">Filter by Category</button>
+        </div>
+      </div>
+      <!-- AWS QuickSight Trending Topics Dashboard Embed -->
+      <div id="trending-topics-dashboard" class="quicksight-embed">
+        <!-- 
+          AWS QuickSight Dashboard Embed Code
+          Replace the iframe below with the actual QuickSight embed code in production
+          Dashboard ID: trending-topics-dashboard
+        -->
+        <iframe
+          id="trending-topics-frame"
+          width="100%"
+          height="600"
+          src="about:blank"
+          frameborder="0"
+          allowfullscreen
+          class="quicksight-placeholder"
+        ></iframe>
+      </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="stats-grid">
+      <div class="stat-card" id="engagement-rate-card">
+        <div class="stat-title">Average Engagement Rate</div>
+        <div class="stat-value" id="engagement-rate-value">--</div>
+        <div class="stat-change" id="engagement-rate-change">Loading...</div>
+      </div>
+      
+      <div class="stat-card" id="watch-time-card">
+        <div class="stat-title">Average Watch Time</div>
+        <div class="stat-value" id="watch-time-value">--</div>
+        <div class="stat-change" id="watch-time-change">Loading...</div>
+      </div>
+      
+      <div class="stat-card" id="video-length-card">
+        <div class="stat-title">Optimal Video Length</div>
+        <div class="stat-value" id="video-length-value">--</div>
+        <div class="stat-change" id="video-length-change">Loading...</div>
+      </div>
+      
+      <div class="stat-card" id="posting-time-card">
+        <div class="stat-title">Peak Posting Time</div>
+        <div class="stat-value" id="posting-time-value">--</div>
+        <div class="stat-change" id="posting-time-change">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Content Categories -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <h3 class="chart-title">Best Performing Content Categories</h3>
+      </div>
+      <!-- AWS QuickSight Content Categories Dashboard Embed -->
+      <div id="content-categories-dashboard" class="quicksight-embed">
+        <!-- 
+          AWS QuickSight Dashboard Embed Code
+          Replace the iframe below with the actual QuickSight embed code in production
+          Dashboard ID: content-categories-dashboard
+        -->
+        <iframe
+          id="content-categories-frame"
+          width="100%"
+          height="600"
+          src="about:blank"
+          frameborder="0"
+          allowfullscreen
+          class="quicksight-placeholder"
+        ></iframe>
+      </div>
+    </div>
+
+    <!-- Upload Your Data -->
+    <div class="upload-collective">
+      <h2 class="section-title">Contribute to Collective Insights</h2>
+      <p class="section-subtitle">Upload your TikTok data anonymously to help improve our collective insights. Your data will be anonymized and aggregated.</p>
+      
+      <div class="drop-zone" id="dropZone">
+        <div class="cloud-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 16L12 12M12 12L8 16M12 12V21M20 16.7428C21.2215 15.734 22 14.2079 22 12.5C22 9.46243 19.5376 7 16.5 7C16.2815 7 16.0771 6.886 15.9661 6.69774C14.6621 4.48484 12.2544 3 9.5 3C5.35786 3 2 6.35786 2 10.5C2 12.5661 2.83545 14.4371 4.18695 15.7935" stroke="#4361ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="drop-zone-text">Drag & Drop your TikTok data export</div>
+        <div class="drop-zone-or">or</div>
+        <button type="button" class="drop-zone-btn" id="browseBtn">Browse Files</button>
+        <input type="file" id="fileInput" accept=".json,.txt" style="display:none;">
+        <pre id="uploadResult" style="max-width:500px; margin-top:1rem; text-align:left; white-space:pre-wrap; word-break:break-word;"></pre>
+      </div>
+    </div>
+
+    <!-- Insights Articles -->
+    <div class="insights-grid">
+      <div class="feature-card">
+        <h3 class="feature-title">How Sound Affects Engagement</h3>
+        <p class="feature-description">Our analysis shows that videos with trending sounds get 45% more engagement than those with original audio. Learn how to leverage sound in your content strategy.</p>
+        <a href="#" class="btn btn-secondary" style="margin-top: 1rem;">Read More</a>
+      </div>
+      
+      <div class="feature-card">
+        <h3 class="feature-title">The Impact of Video Length</h3>
+        <p class="feature-description">Videos between 21-34 seconds have the highest completion rates. Discover the optimal length for different content categories.</p>
+        <a href="#" class="btn btn-secondary" style="margin-top: 1rem;">Read More</a>
+      </div>
+      
+      <div class="feature-card">
+        <h3 class="feature-title">Hashtag Strategy Guide</h3>
+        <p class="feature-description">Using 3-5 relevant hashtags increases discovery by 28%. Learn which hashtags are trending in your niche.</p>
+        <a href="#" class="btn btn-secondary" style="margin-top: 1rem;">Read More</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="container">
+      <h2>Want Personalized Insights?</h2>
+      <p>Sign up for a free account to get analytics tailored to your content</p>
+      <button class="btn btn-accent">Create Free Account</button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="https://assets.codepen.io/123865/internal/avatars/users/default.png?fit=crop&format=auto&height=80&version=1&width=80" alt="TikTok Analytics Logo">
+          <p>Transforming TikTok data into actionable insights for creators and brands.</p>
+        </div>
+        <div class="footer-links">
+          <h4>Platform</h4>
+          <ul>
+            <li><a href="features.html">Features</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="docs.html">Documentation</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-copyright">
+          © 2023 TikTok Analytics. All rights reserved.
+        </div>
+        <div class="footer-social">
+          <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+          <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+          <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // AWS QuickSight Embedding Configuration
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load AWS SDK and configure
+      AWS.config.region = 'us-east-1'; // Replace with your AWS region
+      
+      // Function to load QuickSight dashboards
+      function loadQuickSightDashboards() {
+        // In production, replace with actual AWS Cognito or other authentication method
+        // This is a placeholder for the actual authentication flow
+        const dashboardIds = {
+          'trending-topics': 'dashboard-id-1', // Replace with actual QuickSight dashboard ID
+          'content-categories': 'dashboard-id-2' // Replace with actual QuickSight dashboard ID
+        };
+        
+        // Load placeholder data for stats while waiting for real data
+        loadCollectiveStats();
+        
+        // In production, this would be replaced with actual QuickSight embedding code
+        console.log('QuickSight dashboards would be loaded here');
+      }
+      
+      // Function to load collective stats from AWS Athena or other data source
+      function loadCollectiveStats() {
+        // In production, this would fetch data from AWS Athena or API Gateway
+        // For now, we'll simulate loading with setTimeout
+        setTimeout(() => {
+          // Engagement Rate
+          document.getElementById('engagement-rate-value').textContent = '4.8%';
+          document.getElementById('engagement-rate-change').textContent = '+0.3% from last month';
+          document.getElementById('engagement-rate-change').className = 'stat-change positive';
+          
+          // Watch Time
+          document.getElementById('watch-time-value').textContent = '15.7s';
+          document.getElementById('watch-time-change').textContent = '+1.2s from last month';
+          document.getElementById('watch-time-change').className = 'stat-change positive';
+          
+          // Video Length
+          document.getElementById('video-length-value').textContent = '27s';
+          document.getElementById('video-length-change').textContent = '-3s from last month';
+          document.getElementById('video-length-change').className = 'stat-change negative';
+          
+          // Posting Time
+          document.getElementById('posting-time-value').textContent = '8PM';
+          document.getElementById('posting-time-change').textContent = 'No change from last month';
+          document.getElementById('posting-time-change').className = 'stat-change';
+        }, 1000);
+      }
+      
+      // Initialize dashboards
+      loadQuickSightDashboards();
+      
+      // Set up filter button functionality
+      document.getElementById('filterTopicsBtn').addEventListener('click', function() {
+        // In production, this would trigger QuickSight dashboard filters
+        console.log('Filter button clicked - would update QuickSight dashboard filters');
+      });
+    });
+  </script>
+  
   <script type="module" src="main.js"></script>
 </body>
 </html>
