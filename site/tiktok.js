@@ -1,7 +1,7 @@
 const CLIENT_ID = "6764362ab2mqj3upebq0t3eu21";
 const COGNITO_DOMAIN = "auth.humantone.me";
 const REDIRECT_URI = `${window.location.origin}/tiktok.html`;
-const API_ENDPOINT = "https://api.humantone.me/get-presigned-url"; // sample
+const API_ENDPOINT = "/api/get-presigned-url";
 
 function decodeJwt(token) {
   try {
@@ -23,27 +23,41 @@ function redirectToLogout() {
   window.location.href = logoutUrl;
 }
 
-async function getPresignedUrl(userId, fileName) {
+async function getPresignedUrl(fileName) {
   const res = await fetch(API_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id: userId, file_name: fileName })
+    body: JSON.stringify({ filename: fileName })
   });
   if (!res.ok) throw new Error("Failed to get URL");
   return res.json();
 }
 
-async function uploadFile(file, target, statusEl) {
+function uploadToS3(url, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    xhr.setRequestHeader("Content-Type", file.type || "application/json");
+    xhr.upload.addEventListener("progress", e => {
+      if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+    });
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed: ${xhr.status}`));
+    };
+    xhr.onerror = () => reject(new Error("Network error"));
+    xhr.send(file);
+  });
+}
+
+async function uploadFile(file, statusEl) {
   if (!file) return;
   statusEl.textContent = "Requesting upload URL...";
-  const idToken = localStorage.getItem("cognito_id_token");
-  const userInfo = idToken ? decodeJwt(idToken) : null;
-  const userId = userInfo ? userInfo.sub : "anonymous";
   try {
-    const { url } = await getPresignedUrl(userId, file.name);
-    statusEl.textContent = "Uploading...";
-    const upRes = await fetch(url, { method: "PUT", body: file });
-    if (!upRes.ok) throw new Error("Upload failed");
+    const { url } = await getPresignedUrl(file.name);
+    statusEl.innerHTML = "Uploading... <progress value='0' max='1' style='width:100%'></progress>";
+    const prog = statusEl.querySelector("progress");
+    await uploadToS3(url, file, p => (prog.value = p));
     statusEl.textContent = "Upload successful";
   } catch (e) {
     statusEl.textContent = "Error: " + e.message;
