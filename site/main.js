@@ -121,20 +121,23 @@ function handleFileUpload(event) {
   output.appendChild(statusMsg);
 
   uploadBtn.addEventListener('click', async () => {
+    console.log('Upload button clicked for file:', file.name);
     uploadBtn.disabled = true;
     statusMsg.textContent = 'Requesting upload URL...';
     progress.style.display = 'block';
     progress.value = 0;
     try {
+      console.log('Requesting presigned URL...');
       const { url } = await getPresignedUrl(file.name);
+      console.log('Got presigned URL, starting upload...');
       statusMsg.textContent = 'Uploading...';
       await uploadToS3(url, file, p => (progress.value = p));
       statusMsg.textContent = 'Upload successful';
       progress.style.display = 'none';
       info.innerHTML += ' <span style="color:#4CAF50">✔️</span>';
     } catch (err) {
-      console.error(err);
-      statusMsg.textContent = 'Upload failed';
+      console.error('Upload error:', err);
+      statusMsg.textContent = `Upload failed: ${err.message}`;
       progress.style.display = 'none';
       uploadBtn.disabled = false;
     }
@@ -143,9 +146,8 @@ function handleFileUpload(event) {
 
 // Redirect to Cognito login
 function redirectToLogin() {
-  const loginUrl = `https://auth.humantone.me/login?client_id=3hc50sopb2n3f3ce66ro9fiua6&response_type=code&scope=aws.cognito.signin.user.admin+email+openid&redirect_uri=https%3A%2F%2Fhumaontone.me`;
+  const loginUrl = `https://auth.humantone.me/login?client_id=3hc50sopb2n3f3ce66ro9fiua6&response_type=code&scope=aws.cognito.signin.user.admin+email+openid&redirect_uri=https%3A%2F%2Fhumantone.me`;
   window.location.href = loginUrl;
-
 }
 
 
