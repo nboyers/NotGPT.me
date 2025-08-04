@@ -11,11 +11,7 @@ export function authMiddleware(callback) {
       event.preventDefault();
       event.stopPropagation();
       
-      const CLIENT_ID = "6764362ab2mqj3upebq0t3eu21";
-      const COGNITO_DOMAIN = "auth.humantone.me";
-      const REDIRECT_URI = window.location.origin;
-      
-      const loginUrl = `https://${COGNITO_DOMAIN}/login?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
+      const loginUrl = `https://auth.humantone.me/login?client_id=3hc50sopb2n3f3ce66ro9fiua6&response_type=code&scope=aws.cognito.signin.user.admin+email+openid&redirect_uri=https%3A%2F%2Fhumantone.me`;
       window.location.href = loginUrl;
     }
   };
