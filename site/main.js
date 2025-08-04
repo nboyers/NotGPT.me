@@ -38,7 +38,7 @@ function setupAuthUI(userInfo) {
 
 // === FILE UPLOAD HELPERS ===
 async function getPresignedUrl(filename) {
-  const apiUrl = `${window.location.origin}/api/get-presigned-url`;
+  const apiUrl = window.API_GATEWAY_URL || 'https://4jmsowntz3.execute-api.us-east-1.amazonaws.com/prod/api/get-presigned-url';
   const idToken = localStorage.getItem('cognito_id_token');
   const isAuthenticated = !!idToken;
   
@@ -60,7 +60,7 @@ function uploadToS3(url, file, onProgress) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', url);
-    xhr.setRequestHeader('Content-Type', file.type || 'application/json');
+
     xhr.upload.addEventListener('progress', e => {
       if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
     });

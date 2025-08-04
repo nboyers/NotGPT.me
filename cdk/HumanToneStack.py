@@ -154,16 +154,35 @@ class HumanToneStack(Stack):
         upload_bucket = s3.Bucket(self, "UserUploadBucket",
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True,
-            block_public_access=s3.BlockPublicAccess.BLOCK_ALL, enforce_ssl=True)
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL, 
+            enforce_ssl=True,
+            cors=[
+                s3.CorsRule(
+                    allowed_methods=[s3.HttpMethods.PUT, s3.HttpMethods.POST],
+                    allowed_origins=["https://humantone.me", "http://localhost:3000"],
+                    allowed_headers=["*"],
+                    max_age=3000
+                )
+            ])
         Tags.of(upload_bucket).add("Project", cost_tags["Project"])
 
         aggregation_table = dynamodb.Table(self, "AggregateStatsTable",
-            partition_key={"name": "stat_type", "type": dynamodb.AttributeType.STRING},
-            sort_key={"name": "period", "type": dynamodb.AttributeType.STRING},
+            partition_key=dynamodb.Attribute(name="stat_type", type=dynamodb.AttributeType.STRING),
+            sort_key=dynamodb.Attribute(name="period", type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             removal_policy=RemovalPolicy.DESTROY
         )
         Tags.of(aggregation_table).add("Project", cost_tags["Project"])
+
+        get_url_function = _lambda.Function(self, "GetUploadUrl",
+            runtime=_lambda.Runtime.PYTHON_3_13,
+            architecture=Architecture.ARM_64,
+            handler="GetUploadUrl.handler",
+            code=_lambda.Code.from_asset("lambda/get_upload_url"),
+            environment={
+                "UPLOAD_BUCKET": upload_bucket.bucket_name
+            }
+        )
 
         process_function = _lambda.Function(self, "ProcessUserData",
             runtime=_lambda.Runtime.PYTHON_3_13,
@@ -176,18 +195,7 @@ class HumanToneStack(Stack):
             }
         )
 
-        get_url_function = _lambda.Function(self, "GetUploadUrl",
-            runtime=_lambda.Runtime.PYTHON_3_13,
-            architecture=Architecture.ARM_64,
-            handler="GetUploadUrl.handler",
-            code=_lambda.Code.from_asset("lambda/get_upload_url"),
-            environment={
-                "UPLOAD_BUCKET": upload_bucket.bucket_name
-            }
-        )
-
         upload_bucket.grant_put(get_url_function)
-
         upload_bucket.grant_read(process_function)
         aggregation_table.grant_write_data(process_function)
 
@@ -202,8 +210,25 @@ class HumanToneStack(Stack):
                 allow_methods=["POST", "OPTIONS"]
             )
         )
-        api_resource = api.root.add_resource("api").add_resource("get-presigned-url")
-        api_resource.add_method("POST", apigateway.LambdaIntegration(get_url_function))
+        api_resource = api.root.add_resource("api")
+        presigned_resource = api_resource.add_resource("get-presigned-url")
+        presigned_resource.add_method("POST", apigateway.LambdaIntegration(get_url_function))
+        
+        insights_function = _lambda.Function(self, "GetInsights",
+            runtime=_lambda.Runtime.PYTHON_3_13,
+            architecture=Architecture.ARM_64,
+            handler="GetInsights.handler",
+            code=_lambda.Code.from_asset("lambda/get_insights"),
+            environment={
+                "UPLOAD_BUCKET": upload_bucket.bucket_name,
+                "AGGREGATION_TABLE": aggregation_table.table_name
+            }
+        )
+        
+        aggregation_table.grant_read_data(insights_function)
+        
+        insights_resource = api_resource.add_resource("get-insights")
+        insights_resource.add_method("GET", apigateway.LambdaIntegration(insights_function))
 
         glue_db = glue.CfnDatabase(self, "UserDataDB",
             catalog_id=self.account,
