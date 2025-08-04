@@ -717,6 +717,14 @@ body {
     font-size: 2rem;
   }
   
+  .insights-header h1 {
+    font-size: 2rem;
+  }
+  
+  .insights-header p {
+    font-size: 1rem;
+  }
+  
   .drop-zone {
     padding: 2rem 1rem;
   }
@@ -724,6 +732,113 @@ body {
   .drop-zone-text {
     font-size: 1.5rem;
   }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Insights Page Styles */
+.insights-header {
+  padding: 4rem 0 2rem;
+  text-align: center;
+  background: rgba(15, 15, 17, 0.3);
+  margin-bottom: 3rem;
+}
+
+.insights-header h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(90deg, var(--primary-light), var(--accent-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.insights-header p {
+  font-size: 1.2rem;
+  color: var(--muted-text);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 3rem 0;
+  width: 100%;
+}
+
+.insight-metric {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-light);
+  margin-top: 1rem;
+}
+
+.upload-collective {
+  background: rgba(26, 28, 31, 0.7);
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  margin: 3rem 0;
+  text-align: center;
+  border: 1px solid rgba(63, 65, 80, 0.2);
+  width: 100%;
+  max-width: none;
+}
+
+.quicksight-embed {
+  background: rgba(15, 15, 17, 0.3);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.loading-message {
+  text-align: center;
+  color: var(--muted-text);
+  font-size: 1.1rem;
+  padding: 2rem;
+  grid-column: 1 / -1;
+}
+
+/* Ensure main content is properly centered */
+main.container {
+  display: block;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* CTA Section */
+.cta-section {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--accent-dark) 100%);
+  padding: 4rem 2rem;
+  text-align: center;
+  border-radius: 16px;
+  margin: 4rem 0;
+}
+
+.cta-section h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.cta-section p {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* File Upload Styles */

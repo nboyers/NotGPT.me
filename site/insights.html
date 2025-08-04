@@ -43,7 +43,7 @@
   </section>
 
   <!-- Insights Content -->
-  <section class="container">
+  <main class="container">
     <!-- Trending Topics -->
     <div class="chart-container">
       <div class="chart-header">
@@ -119,7 +119,7 @@
     <div class="insights-grid" id="insightsGrid">
       <div class="loading-message">Loading real-time insights...</div>
     </div>
-  </section>
+  </main>
 
   <!-- CTA Section -->
   <section class="cta-section">
@@ -283,6 +283,10 @@
 
         function displayInsights(insights) {
           const grid = document.getElementById('insightsGrid');
+          if (!insights || insights.length === 0) {
+            grid.innerHTML = '<div class="loading-message">No insights available yet. Upload some data to see collective insights!</div>';
+            return;
+          }
           grid.innerHTML = insights.map(insight => `
             <div class="feature-card">
               <h3 class="feature-title">${insight.title}</h3>
@@ -294,9 +298,9 @@
 
         function displayFallbackInsights() {
           const fallbackInsights = [
-            { title: 'Peak Engagement Hours', description: 'Most successful uploads happen between 6-9 PM EST', metric: '3x higher engagement' },
-            { title: 'Optimal Video Duration', description: 'Videos under 30 seconds show better completion rates', metric: '67% completion rate' },
-            { title: 'Trending Hashtags', description: 'Educational content hashtags are gaining momentum', metric: '+45% this week' }
+            { title: 'Getting Started', description: 'Upload your TikTok data to contribute to collective insights and see trends', metric: 'Upload Now' },
+            { title: 'Community Insights', description: 'Join our growing community of creators sharing anonymous data', metric: 'Be Part of It' },
+            { title: 'Data Privacy', description: 'Your uploads are processed anonymously and aggregated for collective insights', metric: '100% Anonymous' }
           ];
           displayInsights(fallbackInsights);
         }
