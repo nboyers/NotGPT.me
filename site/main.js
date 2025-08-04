@@ -99,14 +99,35 @@ function handleFileUpload(event) {
 
   const info = document.createElement('div');
   info.className = 'file-info';
-  info.innerHTML = `
-    <div style="display:flex;align-items:center;margin-bottom:10px">
-      <div style="margin-right:15px">${icon}</div>
-      <div>
-        <div style="font-weight:bold;font-size:16px">${file.name}</div>
-        <div style="color:#a3aab4;font-size:14px">${(file.size / 1024).toFixed(2)} KB</div>
-      </div>
-    </div>`;
+  // Build file info DOM safely
+  const infoRow = document.createElement('div');
+  infoRow.style.display = 'flex';
+  infoRow.style.alignItems = 'center';
+  infoRow.style.marginBottom = '10px';
+
+  const iconDiv = document.createElement('div');
+  iconDiv.style.marginRight = '15px';
+  iconDiv.innerHTML = icon; // icon is static SVG, safe to use as HTML
+
+  const detailsDiv = document.createElement('div');
+
+  const nameDiv = document.createElement('div');
+  nameDiv.style.fontWeight = 'bold';
+  nameDiv.style.fontSize = '16px';
+  nameDiv.textContent = file.name;
+
+  const sizeDiv = document.createElement('div');
+  sizeDiv.style.color = '#a3aab4';
+  sizeDiv.style.fontSize = '14px';
+  sizeDiv.textContent = `${(file.size / 1024).toFixed(2)} KB`;
+
+  detailsDiv.appendChild(nameDiv);
+  detailsDiv.appendChild(sizeDiv);
+
+  infoRow.appendChild(iconDiv);
+  infoRow.appendChild(detailsDiv);
+
+  info.appendChild(infoRow);
 
   const progress = document.createElement('progress');
   progress.max = 1;
