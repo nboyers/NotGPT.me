@@ -54,7 +54,7 @@
       </div>
       <!-- AWS QuickSight Trending Topics Dashboard Embed -->
       <div id="trending-topics-dashboard" class="quicksight-embed">
-        <canvas id="trendingTopicsChart" style="max-height: 300px; width: 100%;"></canvas>
+        <canvas id="trendingTopicsChart"></canvas>
       </div>
     </div>
 
@@ -86,13 +86,13 @@
     </div>
 
     <!-- Content Categories -->
-    <div class="chart-container">
+      <div class="chart-container small-chart">
       <div class="chart-header">
         <h3 class="chart-title">Best Performing Content Categories</h3>
       </div>
       <!-- AWS QuickSight Content Categories Dashboard Embed -->
       <div id="content-categories-dashboard" class="quicksight-embed">
-        <canvas id="contentCategoriesChart" style="max-height: 200px; width: 100%;"></canvas>
+        <canvas id="contentCategoriesChart"></canvas>
       </div>
     </div>
 
@@ -175,156 +175,133 @@
     </div>
   </footer>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      let trendingChart, categoriesChart;
-      
-      // Load real chart data
-      loadChartData();
-      
-      async function loadChartData() {
+    <script>
+      document.addEventListener('DOMContentLoaded', async function() {
+        let trendingChart, categoriesChart;
+
         try {
           const response = await fetch('https://4jmsowntz3.execute-api.us-east-1.amazonaws.com/prod/api/get-insights');
           const data = await response.json();
-          createChartsWithData(data);
-        } catch (error) {
-          console.error('Failed to load chart data:', error);
-          createChartsWithFallbackData();
-        }
-      }
-      
-      function createChartsWithData(data) {
-        // Extract categories from real data or use fallback
-        const categories = data.length > 0 ? 
-          data.map(item => item.title.replace(/[^a-zA-Z ]/g, '').trim()) :
-          ['No Data', 'Upload Files', 'To See', 'Real Insights'];
-        
-        const values = data.length > 0 ?
-          data.map(() => Math.floor(Math.random() * 10) + 1) :
-          [0, 0, 0, 0];
-        
-        createCharts(categories, values);
-      }
-      
-      function createChartsWithFallbackData() {
-        createCharts(['No Data Available'], [0]);
-      }
-      
-      function createCharts(labels, data) {
-        // Create Trending Topics Chart
-        const trendingCtx = document.getElementById('trendingTopicsChart').getContext('2d');
-        trendingChart = new Chart(trendingCtx, {
-          type: 'bar',
-          data: {
-            labels: labels,
-            datasets: [{
-              label: 'Activity Level',
-              data: data,
-              backgroundColor: '#4361ee',
-              borderRadius: 4
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                title: { display: true, text: 'Activity Level' }
-              }
-            }
-          }
-        });
 
-        // Create Content Categories Chart
-        const categoriesCtx = document.getElementById('contentCategoriesChart').getContext('2d');
-        categoriesChart = new Chart(categoriesCtx, {
-          type: 'doughnut',
-          data: {
-            labels: labels,
-            datasets: [{
-              data: data,
-              backgroundColor: ['#4361ee', '#7209b7', '#f72585', '#4cc9f0', '#4895ef']
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { position: 'bottom' }
-            }
-          }
-        });
-      }
-
-      // Load stats
-      setTimeout(() => {
-        document.getElementById('engagement-rate-value').textContent = '4.8%';
-        document.getElementById('engagement-rate-change').textContent = '+0.3% from last month';
-        document.getElementById('engagement-rate-change').className = 'stat-change positive';
-        
-        document.getElementById('watch-time-value').textContent = '15.7s';
-        document.getElementById('watch-time-change').textContent = '+1.2s from last month';
-        document.getElementById('watch-time-change').className = 'stat-change positive';
-        
-        document.getElementById('video-length-value').textContent = '27s';
-        document.getElementById('video-length-change').textContent = '-3s from last month';
-        document.getElementById('video-length-change').className = 'stat-change negative';
-        
-        document.getElementById('posting-time-value').textContent = '8PM';
-        document.getElementById('posting-time-change').textContent = 'No change from last month';
-        document.getElementById('posting-time-change').className = 'stat-change';
-      }, 500);
-
-      // Load real insights data
-      loadRealInsights();
-
-      // Filter button functionality
-      document.getElementById('filterTopicsBtn').addEventListener('click', function() {
-        if (trendingChart) {
-          const currentData = trendingChart.data.datasets[0].data;
-          const shuffled = [...currentData].sort(() => Math.random() - 0.5);
-          trendingChart.data.datasets[0].data = shuffled;
-          trendingChart.update();
-        }
-      });
-
-      // Function to load real insights from DynamoDB
-      async function loadRealInsights() {
-        try {
-          const response = await fetch('https://4jmsowntz3.execute-api.us-east-1.amazonaws.com/prod/api/get-insights');
-          const insights = await response.json();
-          displayInsights(insights);
+          createCharts(data.trending_topics || [], data.content_categories || []);
+          updateStats(data.stats || {});
+          displayInsights(data.insights || []);
         } catch (error) {
           console.error('Failed to load insights:', error);
+          createCharts([], []);
+          updateStats({});
           displayFallbackInsights();
         }
-      }
 
-      function displayInsights(insights) {
-        const grid = document.getElementById('insightsGrid');
-        grid.innerHTML = insights.map(insight => `
-          <div class="feature-card">
-            <h3 class="feature-title">${insight.title}</h3>
-            <p class="feature-description">${insight.description}</p>
-            <div class="insight-metric">${insight.metric}</div>
-          </div>
-        `).join('');
-      }
+        function createCharts(trending, categories) {
+          const trendLabels = trending.map(t => t.title.replace(/[^a-zA-Z #]/g, '').trim());
+          const trendValues = trending.map(t => t.count);
 
-      function displayFallbackInsights() {
-        const fallbackInsights = [
-          { title: 'Peak Engagement Hours', description: 'Most successful uploads happen between 6-9 PM EST', metric: '3x higher engagement' },
-          { title: 'Optimal Video Duration', description: 'Videos under 30 seconds show better completion rates', metric: '67% completion rate' },
-          { title: 'Trending Hashtags', description: 'Educational content hashtags are gaining momentum', metric: '+45% this week' }
-        ];
-        displayInsights(fallbackInsights);
-      }
-    });
-  </script>
+          const catLabels = categories.map(c => c.title);
+          const catValues = categories.map(c => c.count);
+
+          const trendingCtx = document.getElementById('trendingTopicsChart').getContext('2d');
+          trendingChart = new Chart(trendingCtx, {
+            type: 'bar',
+            data: {
+              labels: trendLabels,
+              datasets: [{
+                label: 'Activity Level',
+                data: trendValues,
+                backgroundColor: '#4361ee',
+                borderRadius: 4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: { display: true, text: 'Activity Level' }
+                }
+              }
+            }
+          });
+
+          const categoriesCtx = document.getElementById('contentCategoriesChart').getContext('2d');
+          categoriesChart = new Chart(categoriesCtx, {
+            type: 'doughnut',
+            data: {
+              labels: catLabels,
+              datasets: [{
+                data: catValues,
+                backgroundColor: ['#4361ee', '#7209b7', '#f72585', '#4cc9f0', '#4895ef']
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'bottom' }
+              }
+            }
+          });
+        }
+
+        function updateStats(stats) {
+          const engagement = stats.engagement_rate;
+          document.getElementById('engagement-rate-value').textContent = engagement ? engagement.toFixed(1) + '%' : '--';
+          document.getElementById('engagement-rate-change').textContent = engagement ? '' : 'No data yet';
+          document.getElementById('engagement-rate-change').className = 'stat-change';
+
+          const watch = stats.avg_watch_time;
+          if (watch) {
+            document.getElementById('watch-time-value').textContent = watch.toFixed(1) + 's';
+            document.getElementById('watch-time-change').textContent = '';
+          } else {
+            document.getElementById('watch-time-value').textContent = '--';
+            document.getElementById('watch-time-change').textContent = 'No data yet';
+          }
+          document.getElementById('watch-time-change').className = 'stat-change';
+
+          const videoLen = stats.video_length;
+          document.getElementById('video-length-value').textContent = videoLen ? videoLen + 's' : '--';
+          document.getElementById('video-length-change').textContent = videoLen ? '' : 'No data yet';
+          document.getElementById('video-length-change').className = 'stat-change';
+
+          const posting = stats.posting_time;
+          document.getElementById('posting-time-value').textContent = posting || '--';
+          document.getElementById('posting-time-change').textContent = posting ? '' : 'No data yet';
+          document.getElementById('posting-time-change').className = 'stat-change';
+        }
+
+        document.getElementById('filterTopicsBtn').addEventListener('click', function() {
+          if (trendingChart) {
+            trendingChart.data.datasets[0].data = [...trendingChart.data.datasets[0].data].sort(() => Math.random() - 0.5);
+            trendingChart.update();
+          }
+        });
+
+        function displayInsights(insights) {
+          const grid = document.getElementById('insightsGrid');
+          grid.innerHTML = insights.map(insight => `
+            <div class="feature-card">
+              <h3 class="feature-title">${insight.title}</h3>
+              <p class="feature-description">${insight.description}</p>
+              <div class="insight-metric">${insight.metric}</div>
+            </div>
+          `).join('');
+        }
+
+        function displayFallbackInsights() {
+          const fallbackInsights = [
+            { title: 'Peak Engagement Hours', description: 'Most successful uploads happen between 6-9 PM EST', metric: '3x higher engagement' },
+            { title: 'Optimal Video Duration', description: 'Videos under 30 seconds show better completion rates', metric: '67% completion rate' },
+            { title: 'Trending Hashtags', description: 'Educational content hashtags are gaining momentum', metric: '+45% this week' }
+          ];
+          displayInsights(fallbackInsights);
+        }
+      });
+    </script>
   
   <script type="module" src="main.js"></script>
 </body>

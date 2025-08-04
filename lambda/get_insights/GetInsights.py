@@ -194,3 +194,64 @@ def process_collective_upload(bucket, key):
     except Exception as e:
         print(f"Error processing collective upload: {str(e)}")
         raise
+
+
+def _get_top_items(stat_type: str, limit: int = 5):
+    """Return top items for a given stat_type sorted by count."""
+    try:
+        resp = table.query(KeyConditionExpression=Key("stat_type").eq(stat_type))
+        items = resp.get("Items", [])
+    except Exception:
+        items = []
+    # DynamoDB stores numbers as Decimals; convert and sort
+    items.sort(key=lambda x: int(x.get("count", 0)), reverse=True)
+    return [{"title": i.get("period", ""), "count": int(i.get("count", 0))} for i in items[:limit]]
+
+
+def handler(event, context):
+    """HTTP handler to return aggregated collective insights."""
+    trending = _get_top_items("collective_hashtag", 5)
+    categories = _get_top_items("collective_content_type", 5)
+
+    # Average watch time calculation
+    watch_item = table.get_item(
+        Key={"stat_type": "collective_watchtime", "period": "TOTAL"}
+    ).get("Item", {})
+    avg_watch = 0.0
+    if watch_item:
+        try:
+            sum_seconds = float(watch_item.get("sum_seconds", 0))
+            sample_count = float(watch_item.get("sample_count", 0))
+            if sample_count:
+                avg_watch = sum_seconds / sample_count
+        except Exception:
+            avg_watch = 0.0
+
+    insights = []
+    if trending:
+        insights.append({
+            "title": f"Top Hashtag #{trending[0]['title']}",
+            "description": "Most frequently occurring hashtag across uploads",
+            "metric": str(trending[0]["count"]),
+        })
+    insights.append({
+        "title": "Average Watch Time",
+        "description": "Average seconds watched per video",
+        "metric": f"{avg_watch:.1f}s",
+    })
+
+    body = {
+        "trending_topics": trending,
+        "content_categories": categories,
+        "stats": {"avg_watch_time": avg_watch},
+        "insights": insights,
+    }
+
+    return {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+        },
+        "body": json.dumps(body),
+    }
