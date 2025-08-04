@@ -39,10 +39,18 @@ function setupAuthUI(userInfo) {
 // === FILE UPLOAD HELPERS ===
 async function getPresignedUrl(filename) {
   const apiUrl = `${window.location.origin}/api/get-presigned-url`;
+  const idToken = localStorage.getItem('cognito_id_token');
+  const isAuthenticated = !!idToken;
+  
   const res = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ filename })
+    body: JSON.stringify({ 
+      filename,
+      user_id: isAuthenticated ? 'authenticated' : 'anonymous',
+      platform: 'tiktok',
+      data_type: isAuthenticated ? 'private' : 'collective'
+    })
   });
   if (!res.ok) throw new Error(`Failed to get presigned URL: ${res.status}`);
   return res.json();
