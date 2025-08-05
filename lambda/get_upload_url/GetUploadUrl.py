@@ -1,10 +1,10 @@
-import boto3  # type: ignore
+from boto3 import client  # type: ignore
 from boto3.dynamodb.conditions import Attr # type: ignore
 import os
 import json
 import datetime
 
-s3 = boto3.client("s3")
+s3 = client("s3")
 BUCKET = os.environ["UPLOAD_BUCKET"]
 
 def handler(event, context):

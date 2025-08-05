@@ -1,25 +1,29 @@
-import boto3 # type: ignore
-import os, json, datetime, hashlib, re
+from boto3 import client, resource # type: ignore
+from os import environ
+from json import loads, dumps
+from hashlib import sha256
+from re import compile as re_compile
+from datetime import datetime
 from urllib.parse import unquote_plus
 from boto3.dynamodb.conditions import Key
 
-s3 = boto3.client("s3")
-glue = boto3.client("glue")
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ['AGGREGATION_TABLE'])
-BUCKET = os.environ["UPLOAD_BUCKET"]
-CRAWLER_NAME = os.environ["CRAWLER_NAME"]
-HASHTAG_RE = re.compile(r"#(\w{2,50})")
+s3 = client("s3")
+glue = client("glue")
+dynamodb = resource('dynamodb')
+table = dynamodb.Table(environ['AGGREGATION_TABLE'])
+BUCKET = environ["UPLOAD_BUCKET"]
+CRAWLER_NAME = environ["CRAWLER_NAME"]
+HASHTAG_RE = re_compile(r"#(\w{2,50})")
 
 def normalize_upload_for_glue(bucket, key):
     """Normalize uploaded data into structured format for Glue Catalog"""
     try:
         obj = s3.get_object(Bucket=bucket, Key=key)
         content = obj["Body"].read().decode("utf-8", errors="ignore")
-        data = json.loads(content) if content.strip() else {}
+        data = loads(content) if content.strip() else {}
         
-        upload_id = hashlib.sha256(f"{key}_{datetime.datetime.now().isoformat()}".encode()).hexdigest()[:16]
-        timestamp = datetime.datetime.now().isoformat()
+        upload_id = sha256(f"{key}_{datetime.now().isoformat()}".encode()).hexdigest()[:16]
+        timestamp = datetime.now().isoformat()
         
         # Extract videos
         videos = extract_videos(data)
@@ -32,7 +36,7 @@ def normalize_upload_for_glue(bucket, key):
                 "content_type": infer_content_type(video),
                 "watch_time_seconds": extract_watch_time(video),
                 "hashtags": extract_hashtags_from_text(video.get("caption", "") or video.get("Caption", "") or video.get("description", "")),
-                "raw_data": json.dumps(video)
+                "raw_data": dumps(video)
             }
             save_to_glue_path("videos", video_record, timestamp)
         
@@ -46,7 +50,7 @@ def normalize_upload_for_glue(bucket, key):
                 "platform": "tiktok",
                 "text": comment.get("comment", ""),
                 "hashtags": extract_hashtags_from_text(comment.get("comment", "")),
-                "raw_data": json.dumps(comment)
+                "raw_data": dumps(comment)
             }
             save_to_glue_path("comments", comment_record, timestamp)
             
@@ -97,15 +101,16 @@ def extract_watch_time(video):
         if k in video:
             try:
                 return float(video[k])
-            except:
-                pass
+            except (ValueError, TypeError) as e:
+                print(f"Error converting {k} to float: {e}")
+                continue
     return None
 
 def extract_hashtags_from_text(text):
     return [m.lower() for m in HASHTAG_RE.findall(text or "")]
 
 def save_to_glue_path(data_type, record, timestamp):
-    dt = datetime.datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+    dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
     year, month, day = dt.year, dt.month, dt.day
     
     glue_key = f"glue-data/{data_type}/year={year}/month={month:02d}/day={day:02d}/{record['upload_id']}_{record.get('video_id', record.get('comment_id', 'unknown'))}.json"
@@ -113,7 +118,7 @@ def save_to_glue_path(data_type, record, timestamp):
     s3.put_object(
         Bucket=BUCKET,
         Key=glue_key,
-        Body=json.dumps(record),
+        Body=dumps(record),
         ContentType="application/json"
     )
 
@@ -146,13 +151,19 @@ def process_collective_aggregation(data, videos, comments):
 def increment_stat(stat_type, period, count=1):
     """Increment a stat in DynamoDB"""
     try:
+        # Validate inputs to prevent injection
+        if not isinstance(stat_type, str) or not isinstance(period, str):
+            raise ValueError("stat_type and period must be strings")
+        if not isinstance(count, (int, float)) or count < 0:
+            raise ValueError("count must be a non-negative number")
+            
         table.update_item(
             Key={"stat_type": stat_type, "period": period},
             UpdateExpression="ADD #c :val SET last_updated = :now",
             ExpressionAttributeNames={"#c": "count"},
             ExpressionAttributeValues={
                 ":val": count,
-                ":now": datetime.datetime.now().isoformat()
+                ":now": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
         )
     except Exception as e:
@@ -161,13 +172,19 @@ def increment_stat(stat_type, period, count=1):
 def add_watch_time(total_seconds, sample_count):
     """Add watch time data to DynamoDB"""
     try:
+        # Validate inputs to prevent injection
+        if not isinstance(total_seconds, (int, float)) or total_seconds < 0:
+            raise ValueError("total_seconds must be a non-negative number")
+        if not isinstance(sample_count, int) or sample_count < 0:
+            raise ValueError("sample_count must be a non-negative integer")
+            
         table.update_item(
             Key={"stat_type": "collective_watchtime", "period": "TOTAL"},
             UpdateExpression="ADD sum_seconds :sec, sample_count :count SET last_updated = :now",
             ExpressionAttributeValues={
                 ":sec": total_seconds,
                 ":count": sample_count,
-                ":now": datetime.datetime.now().isoformat()
+                ":now": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
         )
     except Exception as e:

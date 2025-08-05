@@ -1,9 +1,9 @@
-import boto3
+from boto3 import resource
 import os
 import time
 from boto3.dynamodb.conditions import Attr
 
-dynamodb = boto3.resource('dynamodb')
+dynamodb = resource('dynamodb')
 table = dynamodb.Table(os.environ['USER_TABLE_NAME'])
 
 

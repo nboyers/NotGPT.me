@@ -1,22 +1,23 @@
 import json
-import boto3
-import os
-import datetime
-import hashlib
-import re
-import random
-import math
+from os import environ
+from hashlib import sha256
+from re import compile as re_compile, findall
+from random import sample
+from math import floor
+from boto3 import client, resource
 from boto3.dynamodb.conditions import Key
 from decimal import Decimal
-from collections import Counter
-    
+from collections import Counter, namedtuple
+from datetime import datetime, timezone
 
-quicksight = boto3.client('quicksight')
-dynamodb = boto3.resource('dynamodb')
-s3 = boto3.client('s3')
-table = dynamodb.Table(os.environ['AGGREGATION_TABLE'])
-ACCOUNT_ID = os.environ.get('AWS_ACCOUNT_ID', boto3.client('sts').get_caller_identity()['Account'])
-HASHTAG_RE = re.compile(r"#(\w{2,50})")
+InsightsData = namedtuple('InsightsData', ['trending_topics', 'content_categories', 'avg_watch_time', 'mention_percentage'])
+
+quicksight = client('quicksight')
+dynamodb = resource('dynamodb')
+s3 = client('s3')
+table = dynamodb.Table(environ['AGGREGATION_TABLE'])
+ACCOUNT_ID = environ.get('AWS_ACCOUNT_ID', client('sts').get_caller_identity()['Account'])
+HASHTAG_RE = re_compile(r"#(\w{2,50})")
 
 def _safe_json(body:str):
     try:
@@ -39,22 +40,33 @@ def _get_user_id_from_s3obj(head):
     # 3) Fallback: hash the ETag + size as a pseudo-id (still stable per user if they always upload from same account+file mix)
     etag = head.get("ETag", "").strip('"')
     size = head.get("ContentLength", 0)
-    h = hashlib.sha256(f"{etag}:{size}".encode()).hexdigest()
+    h = sha256(f"{etag}:{size}".encode()).hexdigest()
     return f"fallback_{h[:32]}"
 
 def _inc(stat_type:str, period:str, attr:str="count", n:int=1, extra_sets:dict=None):
+    # Validate inputs to prevent injection
+    if not isinstance(stat_type, str) or not isinstance(period, str) or not isinstance(attr, str):
+        raise ValueError("stat_type, period, and attr must be strings")
+    if not isinstance(n, (int, float)) or n < 0:
+        raise ValueError("n must be a non-negative number")
+    
     expr = "ADD #a :n"
     names = {"#a": attr}
     vals = {":n": n}
     if extra_sets:
         set_parts = []
         for i,(k,v) in enumerate(extra_sets.items(), start=1):
+            if not isinstance(k, str):
+                raise ValueError(f"Extra set key must be string, got {type(k)}")
             names[f"#s{i}"] = k
             vals[f":s{i}"] = v
             set_parts.append(f"#s{i} = :s{i}")
         expr = f"{expr} SET " + ", ".join(set_parts)
+    # Sanitize stat_type and period to allow only alphanumeric and underscores
+    safe_stat_type = re.sub(r'[^\w_]', '', stat_type)
+    safe_period = re.sub(r'[^\w\-]', '', period)
     table.update_item(
-        Key={"stat_type": stat_type, "period": period},
+        Key={"stat_type": safe_stat_type, "period": safe_period},
         UpdateExpression=expr,
         ExpressionAttributeNames=names,
         ExpressionAttributeValues=vals,
@@ -64,13 +76,20 @@ def _add_watchtime(seconds:float, samples:int=1):
     if seconds <= 0 or samples <= 0:
         return
     # keep numeric attributes; use separate ADD for both sums
+   
+    now_iso = datetime.now(timezone.utc).isoformat()
     table.update_item(
         Key={"stat_type": "collective_watchtime", "period": "TOTAL"},
-        UpdateExpression="ADD sum_seconds :sec, sample_count :s SET last_updated = :now",
+        UpdateExpression="ADD #sum_seconds :sec, #sample_count :s SET #last_updated = :now",
+        ExpressionAttributeNames={
+            "#sum_seconds": "sum_seconds",
+            "#sample_count": "sample_count",
+            "#last_updated": "last_updated"
+        },
         ExpressionAttributeValues={
             ":sec": seconds,
             ":s": samples,
-            ":now": datetime.datetime.now().isoformat(),
+            ":now": now_iso,
         },
     )
 
@@ -85,8 +104,9 @@ def _infer_content_type(video):
             try:
                 dur = float(video[k])
                 break
-            except Exception:
-                pass
+            except (ValueError, TypeError) as e:
+                print(f"Error converting {k} to float: {e}")
+                continue
     if video.get("is_live") or video.get("Live") is True:
         return "live"
     if video.get("images_count", 0) and int(video.get("images_count", 0)) > 1:
@@ -106,9 +126,9 @@ def _process_offsite(data:dict):
         src = e.get("Source")
         evt = e.get("Event")
         if src:
-            _inc("collective_offsite_source", src, n=1, extra_sets={"last_updated": datetime.datetime.now().isoformat()})
+            _inc("collective_offsite_source", src, n=1, extra_sets={"last_updated": datetime.now(timezone.utc).isoformat()})
         if evt:
-            _inc("collective_offsite_event", evt, n=1, extra_sets={"last_updated": datetime.datetime.now().isoformat()})
+            _inc("collective_offsite_event", evt, n=1, extra_sets={"last_updated": datetime.now(timezone.utc).isoformat()})
 
 def _process_comments(data:dict):
     clist = (data.get("Comment", {})
@@ -150,8 +170,9 @@ def _process_videos_for_watchtime_and_types(data:dict):
                 try:
                     secs = float(v[k])
                     break
-                except Exception:
-                    pass
+                except (ValueError, TypeError) as e:
+                    print(f"Error converting {k} to float: {e}")
+                    continue
         if secs is not None and secs > 0:
             total_seconds += secs
             samples += 1
@@ -180,12 +201,12 @@ def process_collective_upload(bucket, key):
         data = _safe_json(content)
 
         # 1) register unique user
-        _inc("collective_user", user_id, attr="seen", n=1, extra_sets={"last_seen": datetime.datetime.now().isoformat()})
+        _inc("collective_user", user_id, attr="seen", n=1, extra_sets={"last_seen": datetime.now(timezone.utc).isoformat()})
 
         # 2) generic upload counter by platform and day (you already had this)
         parts = key.split("/")
         platform = parts[1].split("=")[1] if len(parts) > 1 and "=" in parts[1] else "unknown"
-        _inc("collective_"+platform, datetime.datetime.now().strftime("%Y-%m-%d"), attr="upload_count", n=1, extra_sets={"last_updated": datetime.datetime.now().isoformat()})
+        _inc("collective_"+platform, datetime.now(timezone.utc).strftime("%Y-%m-%d"), attr="upload_count", n=1, extra_sets={"last_updated": datetime.now(timezone.utc).isoformat()})
 
         # 3) offsite tracking aggregations
         _process_offsite(data)
@@ -215,7 +236,8 @@ def _get_top_items(stat_type: str, limit: int = 5):
         items = resp.get("Items", [])
         items.sort(key=lambda x: int(x.get("count", 0)), reverse=True)
         return [{"title": i.get("period", ""), "count": int(i.get("count", 0))} for i in items[:limit]]
-    except Exception:
+    except (KeyError, ValueError, TypeError) as e:
+        print(f"Error getting top items for {stat_type}: {e}")
         return []
 
 
@@ -227,14 +249,15 @@ def get_avg_watch_time():
         sum_seconds = float(item.get("sum_seconds", 0))
         sample_count = int(item.get("sample_count", 0))
         return round(sum_seconds / sample_count, 1) if sample_count > 0 else 0
-    except:
+    except (KeyError, ValueError, TypeError, ZeroDivisionError) as e:
+        print(f"Error calculating average watch time: {e}")
         return 0
 
 def get_athena_insights():
     """Query S3 data for user-friendly social media insights"""
     
     try:
-        bucket = os.environ['UPLOAD_BUCKET']
+        bucket = environ['UPLOAD_BUCKET']
         
         # Get total file count first
         total_files = 0
@@ -255,9 +278,9 @@ def get_athena_insights():
         for page in paginator.paginate(Bucket=bucket, Prefix='glue-data/comments/'):
             all_files.extend(page.get('Contents', []))
         
-        if all_files and len(all_files) > 0:
+        if all_files:
             actual_sample_size = min(sample_size, len(all_files))
-            sample_files = random.sample(all_files, actual_sample_size) if actual_sample_size > 0 else []
+            sample_files = sample(all_files, actual_sample_size) if actual_sample_size > 0 else []
             
             for obj in sample_files:
                 try:
@@ -266,14 +289,15 @@ def get_athena_insights():
                     text = data.get('text', '')
                     
                     # Count emojis (basic Unicode ranges)
-                    emoji_count += len(re.findall(r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF]', text))
+                    emoji_count += len(findall(r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF]', text))
                     
                     # Count @ mentions
                     if '@' in text:
                         mention_count += 1
                         
                     total_comments += 1
-                except:
+                except (json.JSONDecodeError, KeyError, UnicodeDecodeError) as e:
+                    print(f"Error processing file {obj['Key']}: {e}")
                     continue
         
         # Total files already calculated above
@@ -287,7 +311,12 @@ def get_athena_insights():
         content_categories = [{"title": "💬 Comments Analyzed", "count": total_files}]
         avg_watch_time = 0  # No video data available
         
-        return trending_topics, content_categories, avg_watch_time, mention_percentage
+        return {
+            'trending_topics': trending_topics,
+            'content_categories': content_categories, 
+            'avg_watch_time': avg_watch_time,
+            'mention_percentage': mention_percentage
+        }
         
     except Exception as e:
         print(f"Analysis error: {e}")
@@ -304,7 +333,7 @@ def update_insights_cache():
             "content_categories": content_categories,
             "avg_watch_time": avg_watch_time,
             "mention_percentage": mention_percentage,
-            "last_updated": datetime.datetime.now().isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat()
         }
         
         table.put_item(
@@ -312,7 +341,7 @@ def update_insights_cache():
                 "stat_type": "insights_cache",
                 "period": "current",
                 "data": json.dumps(cache_data),
-                "last_updated": datetime.datetime.now().isoformat()
+                "last_updated": datetime.now(timezone.utc).isoformat()
             }
         )
         print("Insights cache updated successfully")

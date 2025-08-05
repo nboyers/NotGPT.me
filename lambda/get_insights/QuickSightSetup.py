@@ -1,4 +1,4 @@
-import boto3
+from boto3 import client
 import json
 import os
 
