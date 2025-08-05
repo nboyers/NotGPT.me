@@ -1,5 +1,5 @@
-import boto3 
-from boto3.dynamodb.conditions import Attr
+import boto3  # type: ignore
+from boto3.dynamodb.conditions import Attr # type: ignore
 import os
 import json
 import datetime
@@ -13,7 +13,7 @@ def handler(event, context):
     platform = body.get('platform', 'tiktok')
     data_type = body.get('data_type', 'data')
     filename = body.get('filename', 'data.json')
-    today = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    today = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
 
     # Determine path based on data_type and user_id
     if data_type == 'private' and user_id != 'anonymous':

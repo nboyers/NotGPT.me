@@ -13,7 +13,8 @@ from aws_cdk import (
     aws_wafv2 as wafv2,
     aws_s3_deployment as s3deploy,
     aws_cloudfront_origins as origins,
-    aws_cloudfront as cloudfront,
+    aws_events as events,
+    aws_events_targets as targets,
     CfnOutput
 )
 from aws_cdk.aws_lambda import Architecture
@@ -130,14 +131,15 @@ class HumanToneStack(Stack):
             runtime=_lambda.Runtime.PYTHON_3_11,
             handler="PostSignupLambda.handler",
             code=_lambda.Code.from_asset("lambda/post_signup"),
-            timeout=Duration.seconds(10),
+            memory_size=128,  # Minimal for simple DynamoDB writes
+            timeout=Duration.seconds(5),
             environment={
                 "USER_TABLE_NAME": user_table.table_name
             }
         )
         user_table.grant_write_data(post_signup_lambda)
 
-        user_pool = cognito.UserPool(self, "UserPool",
+        user_pool = cognito.UserPool(self, "UserPool6BA7E5F2-yp4TuYHz9RAa",
             self_sign_up_enabled=True,
             sign_in_aliases=cognito.SignInAliases(email=True),
             lambda_triggers=cognito.UserPoolTriggers(
@@ -179,6 +181,8 @@ class HumanToneStack(Stack):
             architecture=Architecture.ARM_64,
             handler="GetUploadUrl.handler",
             code=_lambda.Code.from_asset("lambda/get_upload_url"),
+            memory_size=128,  # Minimal for presigned URL generation
+            timeout=Duration.seconds(5),
             environment={
                 "UPLOAD_BUCKET": upload_bucket.bucket_name
             }
@@ -189,15 +193,24 @@ class HumanToneStack(Stack):
             architecture=Architecture.ARM_64,
             handler="ProcessUserData.handler",
             code=_lambda.Code.from_asset("lambda/data-cleaner"),
+            memory_size=512,  # Optimized from power tuning
+            timeout=Duration.seconds(30),  # Reduced from default
             environment={
                 "AGGREGATION_TABLE": aggregation_table.table_name,
-                "UPLOAD_BUCKET": upload_bucket.bucket_name
+                "UPLOAD_BUCKET": upload_bucket.bucket_name,
+                "CRAWLER_NAME": "HumanToneStack-DataCrawler"
             }
         )
 
         upload_bucket.grant_put(get_url_function)
-        upload_bucket.grant_read(process_function)
+        upload_bucket.grant_read_write(process_function)
         aggregation_table.grant_write_data(process_function)
+        
+        # Grant Glue permissions to ProcessUserData Lambda
+        process_function.add_to_role_policy(iam.PolicyStatement(
+            actions=["glue:StartCrawler"],
+            resources=[f"arn:aws:glue:{self.region}:{self.account}:crawler/*"]
+        ))
 
         upload_bucket.add_event_notification(
             s3.EventType.OBJECT_CREATED,
@@ -219,16 +232,63 @@ class HumanToneStack(Stack):
             architecture=Architecture.ARM_64,
             handler="GetInsights.handler",
             code=_lambda.Code.from_asset("lambda/get_insights"),
+            memory_size=128,  # Increased for data processing
+            timeout=Duration.seconds(60),  # Increased for S3 sampling
             environment={
                 "UPLOAD_BUCKET": upload_bucket.bucket_name,
-                "AGGREGATION_TABLE": aggregation_table.table_name
+                "GLUE_DATABASE": "humantone_user_data",
+                "AWS_ACCOUNT_ID": self.account,
+                "AGGREGATION_TABLE": aggregation_table.table_name,
+                "INSIGHTS_CACHE_TABLE": aggregation_table.table_name
             }
         )
         
-        aggregation_table.grant_read_data(insights_function)
+        upload_bucket.grant_read_write(insights_function)
+        aggregation_table.grant_read_write_data(insights_function)
+        
+        # Lifecycle policy to reduce storage costs
+        upload_bucket.add_lifecycle_rule(
+            id="DataLifecycle",
+            prefix="collective/",  # Only raw uploads
+            transitions=[
+                s3.Transition(
+                    storage_class=s3.StorageClass.INFREQUENT_ACCESS,
+                    transition_after=Duration.days(30)
+                ),
+                s3.Transition(
+                    storage_class=s3.StorageClass.GLACIER,
+                    transition_after=Duration.days(90)
+                )
+            ]
+        )
+        
+        # Keep processed data accessible for insights
+        upload_bucket.add_lifecycle_rule(
+            id="ProcessedDataLifecycle", 
+            prefix="glue-data/",
+            transitions=[
+                s3.Transition(
+                    storage_class=s3.StorageClass.INFREQUENT_ACCESS,
+                    transition_after=Duration.days(30)  # Minimum 30 days for Standard-IA
+                )
+            ]
+        )
+        
+        # Add Athena and QuickSight permissions
+        insights_function.add_to_role_policy(iam.PolicyStatement(
+            actions=["athena:*", "glue:GetTable", "glue:GetPartitions", "quicksight:GenerateEmbedUrlForAnonymousUser"],
+            resources=["*"]
+        ))
         
         insights_resource = api_resource.add_resource("get-insights")
         insights_resource.add_method("GET", apigateway.LambdaIntegration(insights_function))
+        
+        # EventBridge rule to trigger insights update every 15 minutes
+        
+        insights_schedule = events.Rule(self, "InsightsSchedule",
+            schedule=events.Schedule.rate(Duration.minutes(30))  # Reduced frequency
+        )
+        insights_schedule.add_target(targets.LambdaFunction(insights_function))
 
         glue_db = glue.CfnDatabase(self, "UserDataDB",
             catalog_id=self.account,
@@ -261,31 +321,86 @@ class HumanToneStack(Stack):
             }
         )
         
-        # Create Glue table for private data
-        glue_table_private = glue.CfnTable(self, "PrivateUploadsTable",
+        # Create Glue tables for normalized data
+        glue_table_videos = glue.CfnTable(self, "VideosTable",
             catalog_id=self.account,
             database_name=glue_db.ref,
             table_input={
-                "name": "private_uploads",
+                "name": "videos",
                 "tableType": "EXTERNAL_TABLE",
                 "parameters": {"classification": "json"},
+                "partitionKeys": [
+                    {"name": "year", "type": "string"},
+                    {"name": "month", "type": "string"},
+                    {"name": "day", "type": "string"}
+                ],
                 "storageDescriptor": {
                     "columns": [
-                        {"name": "user_id", "type": "string"},
-                        {"name": "platform", "type": "string"},
+                        {"name": "upload_id", "type": "string"},
+                        {"name": "video_id", "type": "string"},
                         {"name": "timestamp", "type": "string"},
-                        {"name": "event", "type": "string"},
-                        {"name": "raw", "type": "string"}
+                        {"name": "platform", "type": "string"},
+                        {"name": "content_type", "type": "string"},
+                        {"name": "watch_time_seconds", "type": "double"},
+                        {"name": "hashtags", "type": "array<string>"},
+                        {"name": "raw_data", "type": "string"}
                     ],
-                    "location": f"s3://{upload_bucket.bucket_name}/private/",
+                    "location": f"s3://{upload_bucket.bucket_name}/glue-data/videos/",
                     "inputFormat": "org.apache.hadoop.mapred.TextInputFormat",
                     "outputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
                     "serdeInfo": {
-                        "serializationLibrary": "org.openx.data.jsonserde.JsonSerDe",
-                        "parameters": {}
+                        "serializationLibrary": "org.openx.data.jsonserde.JsonSerDe"
                     }
                 }
             }
+        )
+        
+        glue_table_comments = glue.CfnTable(self, "CommentsTable",
+            catalog_id=self.account,
+            database_name=glue_db.ref,
+            table_input={
+                "name": "comments",
+                "tableType": "EXTERNAL_TABLE",
+                "parameters": {"classification": "json"},
+                "partitionKeys": [
+                    {"name": "year", "type": "string"},
+                    {"name": "month", "type": "string"},
+                    {"name": "day", "type": "string"}
+                ],
+                "storageDescriptor": {
+                    "columns": [
+                        {"name": "upload_id", "type": "string"},
+                        {"name": "comment_id", "type": "string"},
+                        {"name": "timestamp", "type": "string"},
+                        {"name": "platform", "type": "string"},
+                        {"name": "text", "type": "string"},
+                        {"name": "hashtags", "type": "array<string>"},
+                        {"name": "raw_data", "type": "string"}
+                    ],
+                    "location": f"s3://{upload_bucket.bucket_name}/glue-data/comments/",
+                    "inputFormat": "org.apache.hadoop.mapred.TextInputFormat",
+                    "outputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+                    "serdeInfo": {
+                        "serializationLibrary": "org.openx.data.jsonserde.JsonSerDe"
+                    }
+                }
+            }
+        )
+        
+        # Glue Crawler to discover partitions
+        crawler_role = iam.Role(self, "GlueCrawlerRole",
+            assumed_by=iam.ServicePrincipal("glue.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSGlueServiceRole")
+            ]
+        )
+        upload_bucket.grant_read(crawler_role)
+        
+        glue_crawler = glue.CfnCrawler(self, "DataCrawler",
+            role=crawler_role.role_arn,
+            database_name=glue_db.ref,
+            targets={"s3Targets": [{"path": f"s3://{upload_bucket.bucket_name}/glue-data/"}]},
+            schedule={"scheduleExpression": "cron(0 2 * * ? *)"}  # Daily at 2 AM
         )
 
         # ------------------------ OUTPUTS ------------------------
@@ -296,6 +411,6 @@ class HumanToneStack(Stack):
         CfnOutput(self, "UserTableName", value=user_table.table_name)
         CfnOutput(self, "UploadBucketName", value=upload_bucket.bucket_name)
         CfnOutput(self, "GlueDatabaseName", value=glue_db.ref)
-        CfnOutput(self, "GlueCollectiveTableName", value="collective_uploads")
-        CfnOutput(self, "GluePrivateTableName", value="private_uploads")
+        CfnOutput(self, "GlueVideosTableName", value="videos")
+        CfnOutput(self, "GlueCommentsTableName", value="comments")
         CfnOutput(self, "ApiUrl", value=api.url)

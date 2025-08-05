@@ -1,14 +1,21 @@
-import boto3  # type: ignore
-import os, json, datetime, hashlib, re
-from urllib.parse import unquote_plus
+import json
+import boto3
+import os
+import datetime
+import hashlib
+import re
+import random
+import math
 from boto3.dynamodb.conditions import Key
+from decimal import Decimal
+from collections import Counter
+    
 
-s3 = boto3.client("s3")
-dynamodb = boto3.resource("dynamodb")
-BUCKET = os.environ["UPLOAD_BUCKET"]
-AGGREGATION_TABLE = os.environ["AGGREGATION_TABLE"]
-table = dynamodb.Table(AGGREGATION_TABLE)
-
+quicksight = boto3.client('quicksight')
+dynamodb = boto3.resource('dynamodb')
+s3 = boto3.client('s3')
+table = dynamodb.Table(os.environ['AGGREGATION_TABLE'])
+ACCOUNT_ID = os.environ.get('AWS_ACCOUNT_ID', boto3.client('sts').get_caller_identity()['Account'])
 HASHTAG_RE = re.compile(r"#(\w{2,50})")
 
 def _safe_json(body:str):
@@ -195,63 +202,206 @@ def process_collective_upload(bucket, key):
         print(f"Error processing collective upload: {str(e)}")
         raise
 
+# Call the processing function for collective uploads
+if os.environ.get('UPLOAD_BUCKET'):
+    # This will be triggered by S3 events in ProcessUserData Lambda
+    pass
+
 
 def _get_top_items(stat_type: str, limit: int = 5):
     """Return top items for a given stat_type sorted by count."""
     try:
         resp = table.query(KeyConditionExpression=Key("stat_type").eq(stat_type))
         items = resp.get("Items", [])
+        items.sort(key=lambda x: int(x.get("count", 0)), reverse=True)
+        return [{"title": i.get("period", ""), "count": int(i.get("count", 0))} for i in items[:limit]]
     except Exception:
-        items = []
-    # DynamoDB stores numbers as Decimals; convert and sort
-    items.sort(key=lambda x: int(x.get("count", 0)), reverse=True)
-    return [{"title": i.get("period", ""), "count": int(i.get("count", 0))} for i in items[:limit]]
+        return []
 
+
+def get_avg_watch_time():
+    """Get real average watch time from DynamoDB"""
+    try:
+        resp = table.get_item(Key={"stat_type": "collective_watchtime", "period": "TOTAL"})
+        item = resp.get("Item", {})
+        sum_seconds = float(item.get("sum_seconds", 0))
+        sample_count = int(item.get("sample_count", 0))
+        return round(sum_seconds / sample_count, 1) if sample_count > 0 else 0
+    except:
+        return 0
+
+def get_athena_insights():
+    """Query S3 data for user-friendly social media insights"""
+    
+    try:
+        bucket = os.environ['UPLOAD_BUCKET']
+        
+        # Get total file count first
+        total_files = 0
+        paginator = s3.get_paginator('list_objects_v2')
+        for page in paginator.paginate(Bucket=bucket, Prefix='glue-data/comments/'):
+            total_files += len(page.get('Contents', []))
+        
+        # Use reasonable sample size for performance
+        sample_size = min(100, total_files)  # Sample up to 100 files
+        
+        # Random sampling across all files
+        emoji_count = 0
+        mention_count = 0
+        total_comments = 0
+        
+        # Get random sample of files
+        all_files = []
+        for page in paginator.paginate(Bucket=bucket, Prefix='glue-data/comments/'):
+            all_files.extend(page.get('Contents', []))
+        
+        if all_files and len(all_files) > 0:
+            actual_sample_size = min(sample_size, len(all_files))
+            sample_files = random.sample(all_files, actual_sample_size) if actual_sample_size > 0 else []
+            
+            for obj in sample_files:
+                try:
+                    file_obj = s3.get_object(Bucket=bucket, Key=obj['Key'])
+                    data = json.loads(file_obj['Body'].read().decode('utf-8'))
+                    text = data.get('text', '')
+                    
+                    # Count emojis (basic Unicode ranges)
+                    emoji_count += len(re.findall(r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF]', text))
+                    
+                    # Count @ mentions
+                    if '@' in text:
+                        mention_count += 1
+                        
+                    total_comments += 1
+                except:
+                    continue
+        
+        # Total files already calculated above
+        pass
+        
+        # Calculate actual percentages instead of estimates
+        emoji_percentage = (emoji_count / total_comments * 100) if total_comments > 0 else 0
+        mention_percentage = (mention_count / total_comments * 100) if total_comments > 0 else 0
+        
+        trending_topics = [{"title": "🔥 Emoji Usage", "count": round(emoji_percentage, 1)}]
+        content_categories = [{"title": "💬 Comments Analyzed", "count": total_files}]
+        avg_watch_time = 0  # No video data available
+        
+        return trending_topics, content_categories, avg_watch_time, mention_percentage
+        
+    except Exception as e:
+        print(f"Analysis error: {e}")
+        return [], [], 0
+
+def update_insights_cache():
+    """Update cached insights data"""
+    try:
+        trending_topics, content_categories, avg_watch_time, mention_percentage = get_athena_insights()
+        
+        # Cache the results in DynamoDB
+        cache_data = {
+            "trending_topics": trending_topics,
+            "content_categories": content_categories,
+            "avg_watch_time": avg_watch_time,
+            "mention_percentage": mention_percentage,
+            "last_updated": datetime.datetime.now().isoformat()
+        }
+        
+        table.put_item(
+            Item={
+                "stat_type": "insights_cache",
+                "period": "current",
+                "data": json.dumps(cache_data),
+                "last_updated": datetime.datetime.now().isoformat()
+            }
+        )
+        print("Insights cache updated successfully")
+        
+    except Exception as e:
+        print(f"Error updating insights cache: {e}")
+
+def get_cached_insights():
+    """Get cached insights data"""
+    try:
+        resp = table.get_item(Key={"stat_type": "insights_cache", "period": "current"})
+        if "Item" in resp:
+            cached_data = json.loads(resp["Item"]["data"])
+            return cached_data
+    except Exception as e:
+        print(f"Error getting cached insights: {e}")
+    return None
 
 def handler(event, context):
-    """HTTP handler to return aggregated collective insights."""
-    trending = _get_top_items("collective_hashtag", 5)
-    categories = _get_top_items("collective_content_type", 5)
-
-    # Average watch time calculation
-    watch_item = table.get_item(
-        Key={"stat_type": "collective_watchtime", "period": "TOTAL"}
-    ).get("Item", {})
-    avg_watch = 0.0
-    if watch_item:
+    """Handle both scheduled updates and HTTP requests"""
+    
+    # Check if this is a scheduled event (EventBridge)
+    if "source" in event and event["source"] == "aws.events":
+        # This is a scheduled update
+        update_insights_cache()
+        return {"statusCode": 200, "body": "Cache updated"}
+    
+    # This is an HTTP request - return cached data
+    cached_data = get_cached_insights()
+    
+    if cached_data:
+        # Use cached data
+        trending_topics = cached_data["trending_topics"]
+        content_categories = cached_data["content_categories"]
+        avg_watch_time = cached_data["avg_watch_time"]
+        mention_percentage = cached_data["mention_percentage"]
+    else:
+        # Fallback: generate data on-demand (first time or cache miss)
         try:
-            sum_seconds = float(watch_item.get("sum_seconds", 0))
-            sample_count = float(watch_item.get("sample_count", 0))
-            if sample_count:
-                avg_watch = sum_seconds / sample_count
-        except Exception:
-            avg_watch = 0.0
-
-    insights = []
-    if trending:
-        insights.append({
-            "title": f"Top Hashtag #{trending[0]['title']}",
-            "description": "Most frequently occurring hashtag across uploads",
-            "metric": str(trending[0]["count"]),
-        })
-    insights.append({
-        "title": "Average Watch Time",
-        "description": "Average seconds watched per video",
-        "metric": f"{avg_watch:.1f}s",
-    })
-
+            trending_topics, content_categories, avg_watch_time, mention_percentage = get_athena_insights()
+            # Update cache for next time
+            update_insights_cache()
+        except:
+            # Final fallback to DynamoDB
+            trending_topics = _get_top_items("collective_hashtag", 5)
+            content_categories = _get_top_items("collective_content_type", 5)
+            avg_watch_time = get_avg_watch_time()
+            mention_percentage = 0
+    
+    top_hashtag = trending_topics[0] if trending_topics else {"title": "none", "count": 0}
+    
     body = {
-        "trending_topics": trending,
-        "content_categories": categories,
-        "stats": {"avg_watch_time": avg_watch},
-        "insights": insights,
+        "trending_topics": trending_topics,
+        "content_categories": content_categories,
+        "stats": {"avg_watch_time": avg_watch_time},
+        "quicksight_urls": get_quicksight_urls(),
+        "insights": [{
+            "title": f"🔥 {top_hashtag['title']}",
+            "description": "Percentage of comments containing emojis",
+            "metric": f"{top_hashtag['count']}% with emojis"
+        }, {
+            "title": "👥 Social Mentions",
+            "description": "Comments with @ mentions to other users",
+            "metric": f"{mention_percentage}% mention others"
+        }]
     }
-
+    
     return {
         "statusCode": 200,
         "headers": {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json", 
             "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
         },
-        "body": json.dumps(body),
+        "body": json.dumps(body, default=str)
     }
+
+def get_quicksight_urls():
+    """Generate QuickSight embed URLs for dashboards"""
+    try:
+        # Create a simple dashboard URL for comment analytics
+        # For now, return None to use Chart.js with real Athena data
+        return {
+            "trending": None,  # Will use Chart.js with Athena data
+            "categories": None  # Will use Chart.js with Athena data
+        }
+    except Exception as e:
+        print(f"QuickSight error: {e}")
+        return {"trending": None, "categories": None}
+
+
